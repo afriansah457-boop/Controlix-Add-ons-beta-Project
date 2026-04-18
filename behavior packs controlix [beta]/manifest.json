@@ -1,0 +1,34 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Controlix BP",
+    "description": "behavior packs",
+    "uuid": "2e7a1b3c-4d5e-4f6a-8b9c-0d1e2f3a4b5c",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 26, 13]
+  },
+  "modules": [
+    {
+      "description": "Scripting module untuk Controlix",
+      "type": "script",
+      "language": "javascript",
+      "uuid": "3f8b1c2d-4a5e-4f6a-8b9c-0d1e2f3a4b5d",
+      "version": [1, 0, 0],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "beta"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "beta"
+    },
+    {
+      "uuid": "4a9c1d2e-3f4b-4f6a-8b9c-0d1e2f3a4b5e",
+      "version": [1, 0, 0]
+    }
+  ]
+}
