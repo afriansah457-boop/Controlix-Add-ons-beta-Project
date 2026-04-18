@@ -1,0 +1,18 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Controlix RP",
+    "description": "resource packs",
+    "uuid": "4a9c1d2e-3f4b-4f6a-8b9c-0d1e2f3a4b5e",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 26, 13]
+  },
+  "modules": [
+    {
+      "description": "Resource module untuk Controlix",
+      "type": "resources",
+      "uuid": "5b0d1e2f-3a4b-4f6a-8b9c-0d1e2f3a4b5f",
+      "version": [1, 0, 0]
+    }
+  ]
+}
