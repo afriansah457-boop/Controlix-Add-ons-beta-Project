@@ -7,6 +7,9 @@
     },
     "land_claim": {
       "textures": "textures/items/land_claim"
+    },
+    "admin_console": {
+      "textures": "textures/items/admin_console"
     }
   }
 }
