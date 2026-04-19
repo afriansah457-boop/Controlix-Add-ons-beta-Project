@@ -4,6 +4,9 @@
   "texture_data": {
     "smartphone_1": {
       "textures": "textures/items/smartphone_1"
+    },
+    "land_claim": {
+      "textures": "textures/items/land_claim"
     }
   }
 }
