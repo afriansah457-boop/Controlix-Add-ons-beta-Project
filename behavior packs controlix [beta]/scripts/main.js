@@ -1,5 +1,6 @@
 import { world } from "@minecraft/server";
 import { openSmartphoneUI } from "./features/smartphone.js";
+import { openAdminPanel } from "./features/admin_panel.js";
 
 // 1. Sensor untuk klik di mana saja (Smartphone)
 world.afterEvents.itemUse.subscribe((event) => {
