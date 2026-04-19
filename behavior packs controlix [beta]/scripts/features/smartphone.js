@@ -20,7 +20,7 @@ export function openSmartphoneUI(player) {
         openPersonalMenu(player);
         break;
       case 1:
-        // Area untuk kategori Ekonomi
+        openEconomyMenu
         break;
       case 2:
         // Area untuk kategori Layanan Publik
