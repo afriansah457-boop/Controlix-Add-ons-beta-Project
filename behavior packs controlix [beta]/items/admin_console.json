@@ -1,0 +1,21 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:item": {
+    "description": {
+      "identifier": "controlix:admin_console",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "§aAdmin console"
+      },
+      "minecraft:icon": {
+        "texture": "admin_console"
+      },
+      "minecraft:hand_equipped": true,
+      "minecraft:stacked_by_data": true
+    }
+  }
+}
