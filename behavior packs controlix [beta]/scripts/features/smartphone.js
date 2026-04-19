@@ -1,29 +1,30 @@
 import { ActionFormData } from "@minecraft/server-ui";
+import { openPersonalMenu } from "./menus/personal.js";
 
 export function openSmartphoneUI(player) {
   const mainMenu = new ActionFormData()
-    .title("📱 SMARTPHONE")
+    .title("SMARTPHONE")
     .body("Selamat datang! Pilih kategori aplikasi:")
-    .button("👤 Personal & Sosial")
-    .button("💰 Ekonomi & Aset")
-    .button("🏢 Layanan Publik")
-    .button("📈 Karir & Progres");
+    .button("Personal & Sosial")
+    .button("Ekonomi & Aset")
+    .button("Layanan Publik")
+    .button("Karir & Progres");
 
   mainMenu.show(player).then((result) => {
     if (result.canceled) return;
 
     switch (result.selection) {
       case 0:
-        // Nantinya memanggil fungsi dari menus/personal.js
+        openPersonalMenu(player);
         break;
       case 1:
-        // Nantinya memanggil fungsi dari menus/economy.js
+        // Area untuk kategori Ekonomi
         break;
       case 2:
-        // Nantinya memanggil fungsi dari menus/public.js
+        // Area untuk kategori Layanan Publik
         break;
       case 3:
-        // Nantinya memanggil fungsi dari menus/progress.js
+        // Area untuk kategori Karir
         break;
     }
   });
