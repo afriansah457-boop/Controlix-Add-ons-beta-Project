@@ -2,15 +2,15 @@ import { ActionFormData } from "@minecraft/server-ui";
 
 export function openPersonalMenu(player) {
   const menu = new ActionFormData()
-    .title("👤 PERSONAL & SOSIAL")
+    .title("PERSONAL & SOSIAL")
     .body("Pilih aplikasi sosial:")
-    .button("👤 Profile")
-    .button("💬 Messages")
-    .button("📞 Contacts")
-    .button("☎️ Call System")
-    .button("📸 Camera")
-    .button("🎵 Music")
-    .button("⬅️ Kembali");
+    .button("Profile")
+    .button("Messages")
+    .button("Contacts")
+    .button("Call System")
+    .button("Camera")
+    .button("Music")
+    .button("Kembali");
 
   menu.show(player).then((result) => {
     if (result.canceled) return;
