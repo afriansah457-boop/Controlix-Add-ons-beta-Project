@@ -2,7 +2,7 @@ import { ActionFormData } from "@minecraft/server-ui";
 import { openPersonalMenu } from "./menus/personal.js";
 import { openEconomyMenu } from "./menus/economy.js";
 import { openPublicMenu } from "./menus/public.js";
-
+import { openProgressMenu } from "./menus/progress.js"; // Import baru
 
 export function openSmartphoneUI(player) {
   const mainMenu = new ActionFormData()
@@ -21,13 +21,13 @@ export function openSmartphoneUI(player) {
         openPersonalMenu(player);
         break;
       case 1:
-        openEconomyMenu
+        openEconomyMenu(player);
         break;
       case 2:
-        openPublicMenu
+        openPublicMenu(player);
         break;
       case 3:
-        // Area untuk kategori Karir
+        openProgressMenu(player); // Memanggil menu progres
         break;
     }
   });
