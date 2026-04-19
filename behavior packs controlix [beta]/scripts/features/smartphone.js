@@ -24,7 +24,7 @@ export function openSmartphoneUI(player) {
         openEconomyMenu
         break;
       case 2:
-        // Area untuk kategori Layanan Publik
+        openPublicMenu
         break;
       case 3:
         // Area untuk kategori Karir
