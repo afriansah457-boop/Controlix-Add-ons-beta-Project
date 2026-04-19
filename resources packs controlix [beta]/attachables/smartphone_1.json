@@ -1,0 +1,30 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "controlix:smartphone_1",
+      "materials": {
+        "default": "entity_alphatest",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/items/smartphone_1",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.smartphone_1"
+      },
+      "animations": {
+        "tpp_hold": "animation.smartphone_1.tpp",
+        "fpp_hold": "animation.smartphone_1.fpp"
+      },
+      "scripts": {
+        "animate": [
+          {"tpp_hold": "c.is_first_person == 0"},
+          {"fpp_hold": "c.is_first_person == 1"}
+        ]
+      },
+      "render_controllers": [ "controller.render.item_default" ]
+    }
+  }
+}
