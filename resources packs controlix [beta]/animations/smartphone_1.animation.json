@@ -1,0 +1,23 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.smartphone_1.tpp": {
+			"loop": true,
+			"bones": {
+				"Rightitem": {
+					"rotation": [105, -2.5, 180],
+					"position": [0, -1.5, -3]
+				}
+			}
+		},
+		"animation.smartphone_1.fpp": {
+			"loop": true,
+			"bones": {
+				"Rightitem": {
+					"rotation": [33.4033, -39.8556, 157.09],
+					"position": [-10, 5, -3]
+				}
+			}
+		}
+	}
+}
