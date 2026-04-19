@@ -1,18 +1,25 @@
 import { world } from "@minecraft/server";
 import { openSmartphoneUI } from "./features/smartphone.js";
 
+// 1. Sensor untuk klik di mana saja (Smartphone)
 world.afterEvents.itemUse.subscribe((event) => {
   const { source: player, itemStack } = event;
   
-  // Deteksi jika item adalah Smartphone
   if (itemStack.typeId === "controlix:smartphone_1") {
     openSmartphoneUI(player);
-  } 
-  // Deteksi jika item adalah Land Claim Tool
-  else if (itemStack.typeId === "controlix:land_claim") {
-    // Untuk sementara, kita berikan pesan percobaan
-    player.sendMessage("Memulai proses klaim lahan...");
+  }
+});
+
+// 2. Sensor khusus untuk klik pada blok (Land Claim)
+world.afterEvents.itemUseOn.subscribe((event) => {
+  const { source: player, itemStack, block } = event;
+  
+  if (itemStack.typeId === "controlix:land_claim") {
+    // Mengambil koordinat X, Y, Z dari blok yang diklik
+    const { x, y, z } = block.location;
     
-    // Nanti kita bisa memanggil fungsi khusus land claim di sini
+    player.sendMessage(`Kamu menargetkan blok di koordinat: ${x}, ${y}, ${z}`);
+    
+    // Logika klaim tanah akan kita taruh di sini nantinya
   }
 });
