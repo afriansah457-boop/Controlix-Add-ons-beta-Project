@@ -1,0 +1,30 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.admin_console.fpp": {
+			"loop": true,
+			"animation_length": 0.9583,
+			"bones": {
+				"rightitem": {
+					"rotation": {
+						"0.0": [77.9165, -61.6106, -237.7743],
+						"0.1667": [70.4165, -61.6106, -237.7743],
+						"0.3333": [77.0995, -61.6106, -237.7743],
+						"0.4583": [59.0367, -61.6106, -237.7743],
+						"0.625": [77.2575, -61.6106, -237.7743]
+					},
+					"position": [-9, 3.5, -2.5]
+				}
+			}
+		},
+		"animation.admin_console.tpp": {
+			"loop": true,
+			"bones": {
+				"rightitem": {
+					"rotation": [94.9952, 0.0095, -180.2178],
+					"position": [0, -2.5, -2.5]
+				}
+			}
+		}
+	}
+}
