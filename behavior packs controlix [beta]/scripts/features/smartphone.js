@@ -1,5 +1,7 @@
 import { ActionFormData } from "@minecraft/server-ui";
 import { openPersonalMenu } from "./menus/personal.js";
+import { openEconomyMenu } from "./menus/economy.js";
+
 
 export function openSmartphoneUI(player) {
   const mainMenu = new ActionFormData()
