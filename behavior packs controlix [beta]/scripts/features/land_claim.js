@@ -6,11 +6,19 @@ import { ModalFormData } from "@minecraft/server-ui";
  * @param {string[]} playerNames
  */
 export function bukaMenuLahan(player, playerNames, titik1, titik2) {
-  // Pastikan playerNames tidak kosong agar dropdown tidak error
-  const listPemain = playerNames.length > 0 ? playerNames : ["Tidak ada pemain"];
+  // PROTEKSI: Jika koordinat hilang, jangan buka UI
+  if (!titik1 || !titik2) {
+    return player.sendMessage("§c[ERROR] Koordinat belum lengkap! Pastikan set Titik 1 dan Titik 2.");
+  }
+
+  // PROTEKSI: Pastikan playerNames adalah array dan tidak kosong
+  let listPemain = ["Tidak ada pemain"];
+  if (Array.isArray(playerNames) && playerNames.length > 0) {
+    listPemain = playerNames;
+  }
 
   const landMenu = new ModalFormData()
-    .title("Registrasi Lahan Baru")
+    .title("§lREGISTRASI LAHAN")
     .textField("Nama Lahan:", "Contoh: Toko Baju")
     .dropdown("Status Lahan:", ["Private", "Dijual"])
     .textField("Harga (Isi 0 jika Private):", "0")
@@ -25,25 +33,25 @@ export function bukaMenuLahan(player, playerNames, titik1, titik2) {
     const [inputNamaLahan, inputStatusIndex, inputHarga, selectPemainIndex] = result.formValues;
     const inputPemilik = listPemain[selectPemainIndex];
 
-    // Validasi Nama
+    // Validasi Nama Lahan
     if (!inputNamaLahan || inputNamaLahan.trim() === "") {
       player.sendMessage("§c[ERROR] Nama Lahan tidak boleh kosong!");
-      // Gunakan system.run untuk memanggil ulang UI agar tidak crash
       return system.run(() => bukaMenuLahan(player, playerNames, titik1, titik2)); 
     }
 
-    // Validasi Harga jika status "Dijual"
-    if (inputStatusIndex === 1 && (isNaN(Number(inputHarga)) || inputHarga.trim() === "")) {
-      player.sendMessage("§c[ERROR] Harga harus berupa angka valid!");
+    // Validasi Harga
+    const hargaFinal = Number(inputHarga);
+    if (inputStatusIndex === 1 && (isNaN(hargaFinal) || inputHarga.trim() === "")) {
+      player.sendMessage("§c[ERROR] Harga harus berupa angka!");
       return system.run(() => bukaMenuLahan(player, playerNames, titik1, titik2));
     }
 
     const dataLahanBaru = {
       nama: inputNamaLahan,
       status: inputStatusIndex === 0 ? "Private" : "Dijual",
-      harga: Number(inputHarga),
+      harga: hargaFinal,
       pemilik: inputPemilik,
-      koordinat: { titik1, titik2 },
+      koordinat: { t1: titik1, t2: titik2 },
       timestamp: Date.now()
     };
 
@@ -56,9 +64,8 @@ export function bukaMenuLahan(player, playerNames, titik1, titik2) {
 
 function simpanDataLahan(dataBaru) {
   let semuaLahan = [];
-  
-  // Ambil data lama
   const dataLama = world.getDynamicProperty("data_lahan_server");
+  
   if (dataLama) {
     try {
       semuaLahan = JSON.parse(dataLama);
@@ -68,7 +75,13 @@ function simpanDataLahan(dataBaru) {
   }
 
   semuaLahan.push(dataBaru);
-
-  // Perbaikan typo: world.setDynamicProperty
-  world.setDynamicProperty("data_lahan_server", JSON.stringify(semuaLahan));
+  
+  // Batas DynamicProperty adalah 32,767 karakter. 
+  // Jika terlalu banyak, JSON.stringify akan gagal disimpan.
+  const stringData = JSON.stringify(semuaLahan);
+  if (stringData.length > 32000) {
+    world.sendMessage("§c[WARNING] Database lahan hampir penuh! Segera backup data.");
+  }
+  
+  world.setDynamicProperty("data_lahan_server", stringData);
 }
