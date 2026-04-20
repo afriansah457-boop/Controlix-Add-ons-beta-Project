@@ -23,7 +23,7 @@ world.beforeEvents.chatSend.subscribe((event) => {
 });
 
 // --- TRIGGER ITEM ---
-world.afterEvents.itemUse.subscribe((data) => {
+world.beforeEvents.itemUse.subscribe((data) => {
     const player = data.source;
     if (data.itemStack.typeId === ADMIN_ITEM_ID) {
         if (player.hasTag("admin")) {
