@@ -5,7 +5,7 @@
     "description": "behavior packs",
     "uuid": "2e7a1b3c-4d5e-4f6a-8b9c-0d1e2f3a4b5c",
     "version": [1, 0, 0],
-    "min_engine_version": [1, 26, 13]
+    "min_engine_version": [1, 26, 10]
   },
   "modules": [
     {
