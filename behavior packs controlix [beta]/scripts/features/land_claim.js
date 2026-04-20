@@ -1,64 +1,74 @@
 import { world, system } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
 
-// Fungsi utama untuk memunculkan menu
+/**
+ * @param {import("@minecraft/server").Player} player
+ * @param {string[]} playerNames
+ */
 export function bukaMenuLahan(player, playerNames, titik1, titik2) {
+  // Pastikan playerNames tidak kosong agar dropdown tidak error
+  const listPemain = playerNames.length > 0 ? playerNames : ["Tidak ada pemain"];
+
   const landMenu = new ModalFormData()
     .title("Registrasi Lahan Baru")
     .textField("Nama Lahan:", "Contoh: Toko Baju")
     .dropdown("Status Lahan:", ["Private", "Dijual"])
     .textField("Harga (Isi 0 jika Private):", "0")
-    .dropdown("Pilih Pemilik Awal:", playerNames);
+    .dropdown("Pilih Pemilik Awal:", listPemain);
 
   landMenu.show(player).then((result) => {
     if (result.canceled) {
-      player.sendMessage("[INFO] Pendaftaran lahan dibatalkan.");
+      player.sendMessage("§e[INFO] Pendaftaran lahan dibatalkan.");
       return; 
     }
 
-    const inputNamaLahan = result.formValues[0];
-    const inputStatusIndex = result.formValues[1]; // 0: Private, 1: Dijual
-    const inputHarga = result.formValues[2];
-    const inputPemilik = playerNames[result.formValues[3]];
+    const [inputNamaLahan, inputStatusIndex, inputHarga, selectPemainIndex] = result.formValues;
+    const inputPemilik = listPemain[selectPemainIndex];
 
-    if (inputNamaLahan.trim() === "") {
-      player.sendMessage("[ERROR] Nama Lahan tidak boleh kosong!");
+    // Validasi Nama
+    if (!inputNamaLahan || inputNamaLahan.trim() === "") {
+      player.sendMessage("§c[ERROR] Nama Lahan tidak boleh kosong!");
+      // Gunakan system.run untuk memanggil ulang UI agar tidak crash
       return system.run(() => bukaMenuLahan(player, playerNames, titik1, titik2)); 
     }
 
-    if (inputStatusIndex === 1 && (isNaN(inputHarga) || inputHarga.trim() === "")) {
-      player.sendMessage("[ERROR] Harga harus berupa angka valid!");
+    // Validasi Harga jika status "Dijual"
+    if (inputStatusIndex === 1 && (isNaN(Number(inputHarga)) || inputHarga.trim() === "")) {
+      player.sendMessage("§c[ERROR] Harga harus berupa angka valid!");
       return system.run(() => bukaMenuLahan(player, playerNames, titik1, titik2));
     }
 
-    // 1. Membungkus semua data lahan menjadi satu objek
     const dataLahanBaru = {
       nama: inputNamaLahan,
       status: inputStatusIndex === 0 ? "Private" : "Dijual",
       harga: Number(inputHarga),
       pemilik: inputPemilik,
-      koordinat: { titik1: titik1, titik2: titik2 }
+      koordinat: { titik1, titik2 },
+      timestamp: Date.now()
     };
 
-    // 2. Memanggil fungsi simpan
     simpanDataLahan(dataLahanBaru);
-    player.sendMessage(`[SUKSES] Lahan '${inputNamaLahan}' berhasil disimpan ke sistem server!`);
+    player.sendMessage(`§a[SUKSES] Lahan '§f${inputNamaLahan}§a' berhasil disimpan!`);
+  }).catch((err) => {
+    console.error("Gagal membuka menu lahan: " + err);
   });
 }
 
-// Fungsi untuk menyimpan data ke world
 function simpanDataLahan(dataBaru) {
   let semuaLahan = [];
   
-  // Mengambil data lahan yang sudah ada di server sebelumnya
+  // Ambil data lama
   const dataLama = world.getDynamicProperty("data_lahan_server");
   if (dataLama) {
-    semuaLahan = JSON.parse(dataLama); // Mengubah teks JSON kembali menjadi daftar
+    try {
+      semuaLahan = JSON.parse(dataLama);
+    } catch (e) {
+      semuaLahan = [];
+    }
   }
 
-  // Memasukkan lahan baru ke dalam daftar
   semuaLahan.push(dataBaru);
 
-  // Menyimpan seluruh daftar kembali ke world sebagai teks JSON
+  // Perbaikan typo: world.setDynamicProperty
   world.setDynamicProperty("data_lahan_server", JSON.stringify(semuaLahan));
 }
