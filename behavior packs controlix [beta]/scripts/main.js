@@ -1,68 +1,78 @@
 import { world, system } from "@minecraft/server";
 import { openSmartphoneUI } from "./features/smartphone.js";
 import { openAdminLogin } from "./features/admin.js";
-import { openAdminPanel } from "./features/admin_panel.js"; // Import menu buatan temanmu
+import { openAdminPanel } from "./features/admin_panel.js"; 
 import { bukaMenuLahan } from "./features/land_claim.js";
 
-// 1. Sensor obrolan sebelum terkirim (Untuk login admin rahasia)
+// --- 1. CHAT SENSOR (!admin) ---
 world.beforeEvents.chatSend.subscribe((event) => {
-  const { sender: player, message } = event;
+    const { sender: player, message } = event;
 
-  if (message === "!admin") {
-    event.cancel = true;
-    system.run(() => {
-      openAdminLogin(player);
-    });
-  }
+    if (message.toLowerCase() === "!admin") {
+        event.cancel = true;
+        // Gunakan system.run agar UI muncul setelah chat dibatalkan
+        system.run(() => {
+            openAdminLogin(player);
+        });
+    }
 });
 
-// 2. Sensor untuk item yang diklik di udara (Smartphone & Admin Panel)
+// --- 2. ITEM USE SENSOR (Smartphone & Admin Panel) ---
 world.afterEvents.itemUse.subscribe((event) => {
-  const { source: player, itemStack } = event;
-  
-  if (itemStack.typeId === "controlix:smartphone_1") {
-    openSmartphoneUI(player);
-  } 
-  // Bagian ini memanggil UI admin panel buatan temanmu
-  else if (itemStack.typeId === "controlix:admin_console") { 
-    const isUserAdmin = player.getDynamicProperty("role") === "admin";
-    if (isUserAdmin) {
-      openAdminPanel(player);
-    } else {
-      player.sendMessage("[ERROR] Kamu tidak memiliki akses admin.");
-    }
-  }
+    const { source: player, itemStack } = event;
+    const typeId = itemStack.typeId;
+
+    // Gunakan system.run untuk semua pembukaan UI agar stabil
+    system.run(() => {
+        if (typeId === "controlix:smartphone_1") {
+            openSmartphoneUI(player);
+        } 
+        else if (typeId === "controlix:admin_console") { 
+            // Cek role atau tag admin
+            const isUserAdmin = player.getDynamicProperty("role") === "admin" || player.hasTag("admin");
+            if (isUserAdmin) {
+                openAdminPanel(player);
+            } else {
+                player.sendMessage("§c[ERROR] Kamu tidak memiliki akses admin.");
+            }
+        }
+    });
 });
 
-// 3. Sensor khusus untuk klik pada blok (Land Claim)
+// --- 3. CLICK ON BLOCK SENSOR (Land Claim) ---
 world.afterEvents.itemUseOn.subscribe((event) => {
-  const { source: player, itemStack, block } = event;
-  
-  if (itemStack.typeId === "controlix:land_claim") {
-    const isUserAdmin = player.getDynamicProperty("role") === "admin";
+    const { source: player, itemStack, block } = event;
     
-    if (!isUserAdmin) {
-      player.sendMessage("[ERROR] Hanya Admin yang dapat menggunakan alat ini.");
-      return;
+    if (itemStack.typeId === "controlix:land_claim") {
+        const isUserAdmin = player.getDynamicProperty("role") === "admin" || player.hasTag("admin");
+        
+        if (!isUserAdmin) {
+            player.sendMessage("§c[ERROR] Hanya Admin yang dapat menggunakan alat ini.");
+            return;
+        }
+
+        const { x, y, z } = block.location;
+        const titik1 = player.getDynamicProperty("titik_1");
+
+        if (!titik1) {
+            // SET TITIK 1
+            player.setDynamicProperty("titik_1", `${x},${y},${z}`);
+            player.sendMessage(`§b[LAND CLAIM]§f Titik 1 disetel pada: §a${x}, ${y}, ${z}`);
+            player.playSound("random.orb");
+        } else {
+            // SET TITIK 2 & BUKA MENU
+            const koordinat2 = `${x},${y},${z}`;
+            player.sendMessage(`§b[LAND CLAIM]§f Titik 2 disetel pada: §a${x}, ${y}, ${z}`);
+
+            // Perbaikan: Gunakan getAllPlayers()
+            const playerNames = world.getAllPlayers().map(p => p.name);
+            
+            system.run(() => {
+                bukaMenuLahan(player, playerNames, titik1, koordinat2);
+            });
+
+            // Reset koordinat setelah menu terbuka
+            player.setDynamicProperty("titik_1", undefined);
+        }
     }
-
-    const { x, y, z } = block.location;
-    const titik1 = player.getDynamicProperty("titik_1");
-
-    if (!titik1) {
-      player.setDynamicProperty("titik_1", `${x},${y},${z}`);
-      player.sendMessage(`[LAND CLAIM] Titik 1 disetel pada: ${x}, ${y}, ${z}`);
-    } else {
-      player.sendMessage(`[LAND CLAIM] Titik 2 disetel pada: ${x}, ${y}, ${z}`);
-      
-      const playerNames = world.getPlayers().map(p => p.name);
-      if (playerNames.length === 0) playerNames.push(player.name);
-
-      system.run(() => {
-        bukaMenuLahan(player, playerNames, titik1, `${x},${y},${z}`);
-      });
-      
-      player.setDynamicProperty("titik_1", undefined);
-    }
-  }
 });
