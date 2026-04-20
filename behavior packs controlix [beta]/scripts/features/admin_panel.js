@@ -1,7 +1,7 @@
 import { world, system } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 
-const ADMIN_ITEM_ID = "controlix:admin_panel"; // Ganti ke ID item 3D kamu jika ada
+const ADMIN_ITEM_ID = "controlix:admin_panel";
 
 // --- LOGIKA TICKING (Freeze System) ---
 system.runInterval(() => {
@@ -22,25 +22,23 @@ world.beforeEvents.chatSend.subscribe((event) => {
     }
 });
 
-// --- TRIGGER ITEM DENGAN NOTIFIKASI ---
-world.beforeEvents.itemUse.subscribe((data) => {
+// --- TRIGGER ITEM ---
+world.afterEvents.itemUse.subscribe((data) => {
     const player = data.source;
     if (data.itemStack.typeId === ADMIN_ITEM_ID) {
         if (player.hasTag("admin")) {
-            system.run(() => openAdminPanel(player));
+            openAdminPanel(player);
         } else {
-            system.run(() => {
-                player.sendMessage("§canda belum mempunyai tag admin!");
-                player.playSound("note.bass");
-            });
+            player.sendMessage("§cAnda belum mempunyai tag admin!");
+            player.playSound("note.bass");
         }
     }
 });
 
-// --- MENU UTAMA (Sesuai Gambar) ---
-function openAdminPanel(player) {
+// --- MENU UTAMA (WAJIB ADA 'export') ---
+export function openAdminPanel(player) {
     const mainForm = new ActionFormData()
-        .title("§l§ADMIN PANEL")
+        .title("§lADMIN PANEL")
         .button("- Chat Filter Settings\n§8Konfigurasi Anti-Spam", "textures/ui/settings_glyph_color")
         .button("- Chat Format Settings\n§8Atur tampilan chat", "textures/ui/comment")
         .button("§c- Mute/Unmute\n§8Bisukan pemain", "textures/ui/mute_off")
@@ -54,21 +52,20 @@ function openAdminPanel(player) {
         switch (res.selection) {
             case 0: openFilterSettings(player); break;
             case 1: openChatFormatSettings(player); break;
-            case 2: openPlayerSelector(player, "Mute", toggleMute); break;
-            case 3: openPlayerSelector(player, "Freeze", toggleFreeze); break;
-            case 4: openPlayerSelector(player, "Clear EC", clearEnderChest); break;
+            case 2: openPlayerSelector(player, "Mute Control", toggleMute); break;
+            case 3: openPlayerSelector(player, "Freeze Control", toggleFreeze); break;
+            case 4: openPlayerSelector(player, "Clear Ender Chest", clearEnderChest); break;
             case 5: openInventorySee(player); break;
             case 6: 
-                world.sendMessage("\n".repeat(20) + "§aChat telah dibersihkan oleh Admin.");
+                world.sendMessage("\n".repeat(25) + "§aChat telah dibersihkan oleh Admin.");
                 break;
         }
     });
 }
 
-// --- FUNGSI-FUNGSI SETTINGS ---
+// --- FUNGSI PENDUKUNG ---
 function openFilterSettings(player) {
     new ModalFormData().title("Filter Settings")
-        .label("§e=== Filter Settings ===")
         .toggle("Master Disable", false)
         .toggle("Enable Anti-Spam", true)
         .textField("Max Messages", "5", "5")
@@ -80,7 +77,6 @@ function openFilterSettings(player) {
 
 function openChatFormatSettings(player) {
     new ModalFormData().title("Chat Format Settings")
-        .label("§e=== Chat Format Settings ===")
         .textField("Global Format", "[{player}] >> {message}", "[{player}] >> {message}")
         .textField("Clan Format", "§e[C] §f[{player}] >> {message}")
         .show(player).then((res) => {
@@ -89,20 +85,21 @@ function openChatFormatSettings(player) {
         });
 }
 
-// --- PEMILIH PEMAIN (SELECTOR) ---
 function openPlayerSelector(player, title, actionFunction) {
     const players = world.getAllPlayers();
+    if (players.length === 0) return player.sendMessage("§cTidak ada pemain online.");
     const names = players.map(p => p.name);
     
     new ModalFormData().title(title)
         .dropdown("Pilih Target Player:", names)
         .show(player).then((res) => {
             if (res.canceled) return openAdminPanel(player);
-            actionFunction(player, players[res.formValues[0]]);
+            const target = players[res.formValues[0]];
+            if (target) actionFunction(player, target);
         });
 }
 
-// --- LOGIKA EKSEKUSI ---
+// --- LOGIKA EKSEKUSI (Perbaikan Backticks) ---
 function toggleMute(admin, target) {
     if (target.hasTag("muted")) {
         target.removeTag("muted");
@@ -124,9 +121,10 @@ function toggleFreeze(admin, target) {
 }
 
 function clearEnderChest(admin, target) {
-    // Menghapus item di slot enderchest menggunakan command
-    admin.runCommandAsync(`replaceitem entity "${target.name}" slot.enderchest 0 air 64`);
-    admin.sendMessage(`§dMembersihkan Ender Chest ${target.name}...`);
+    for (let i = 0; i < 27; i++) {
+        admin.runCommandAsync(`replaceitem entity "${target.name}" slot.enderchest ${i} air`);
+    }
+    admin.sendMessage(`§dEnder Chest ${target.name} dikosongkan.`);
 }
 
 function openInventorySee(player) {
@@ -134,24 +132,27 @@ function openInventorySee(player) {
     const names = players.map(p => p.name);
 
     new ModalFormData().title("Inventory Viewer")
-        .dropdown("Pilih player untuk dilihat inventorynya:", names)
+        .dropdown("Pilih player:", names)
         .show(player).then((res) => {
             if (res.canceled) return openAdminPanel(player);
-            
             const target = players[res.formValues[0]];
+            if (!target) return;
+
             const inv = target.getComponent("inventory").container;
-            let itemList = `§eInventory §b${target.name}§f:\n\n`;
+            let itemList = `§eInv §b${target.name}§f:\n\n`;
+            let empty = true;
 
             for (let i = 0; i < inv.size; i++) {
                 const item = inv.getItem(i);
                 if (item) {
-                    itemList += `§7[Slot ${i}] §f${item.typeId.split(":")[1]} §7(x${item.amount})\n`;
+                    empty = false;
+                    itemList += `§7[${i}] §f${item.typeId.replace("minecraft:", "")} (x${item.amount})\n`;
                 }
             }
 
             new ActionFormData()
                 .title(`Inv: ${target.name}`)
-                .body(itemList === "" ? "Inventory Kosong" : itemList)
+                .body(empty ? "§cKosong" : itemList)
                 .button("Kembali")
                 .show(player).then(() => openAdminPanel(player));
         });
