@@ -7,7 +7,7 @@ const ADMIN_ITEM_ID = "controlix:admin_console";
 system.runInterval(() => {
     for (const player of world.getAllPlayers()) {
         if (player.hasTag("frozen")) {
-            // Tetap teleport ke lokasi sendiri agar tidak bisa bergerak
+            // Memaksa posisi pemain tetap agar tidak bisa bergerak [cite: 12, 63]
             player.teleport(player.location, { checkForBlocks: false });
         }
     }
@@ -16,8 +16,7 @@ system.runInterval(() => {
 // --- 2. LOGIKA CHAT (Mute System) ---
 world.beforeEvents.chatSend.subscribe((event) => {
     if (event.sender.hasTag("muted")) {
-        event.cancel = true;
-        // Menggunakan system.run karena mengirim pesan di beforeEvents bersifat read-only
+        event.cancel = true; // Batalkan pesan agar tidak terkirim [cite: 13, 64]
         system.run(() => {
             event.sender.sendMessage("§cKamu sedang dimute oleh admin!");
         });
@@ -25,23 +24,22 @@ world.beforeEvents.chatSend.subscribe((event) => {
 });
 
 // --- 3. TRIGGER ITEM (Optimasi afterEvents) ---
-// Disarankan menggunakan afterEvents agar tidak konflik dengan sistem lain [cite: 20]
 world.afterEvents.itemUse.subscribe((data) => {
     const player = data.source;
     const itemStack = data.itemStack;
 
-    // Validasi jika tangan kosong untuk mencegah error log [cite: 33, 34]
+    // Validasi tangan kosong untuk mencegah error log 
     if (!itemStack) return;
 
     if (itemStack.typeId === ADMIN_ITEM_ID) {
         const isAdmin = player.hasTag("admin") || player.getDynamicProperty("role") === "admin";
         
         if (isAdmin) {
-            // Gunakan system.run agar UI muncul stabil di tick berikutnya [cite: 39]
+            // Gunakan system.run agar UI muncul stabil 
             system.run(() => openAdminPanel(player));
         } else {
             player.sendMessage("§c[ERROR] Anda tidak memiliki akses admin!");
-            player.playSound("note.bass"); // Audio feedback penolakan [cite: 38, 45]
+            player.playSound("note.bass"); // Feedback audio penolakan [cite: 48, 55, 134]
         }
     }
 });
@@ -49,7 +47,7 @@ world.afterEvents.itemUse.subscribe((data) => {
 // --- 4. MENU UTAMA ---
 export function openAdminPanel(player) {
     const mainForm = new ActionFormData()
-        .title("§lADMIN PANEL") // Perbaikan typo title [cite: 17, 49]
+        .title("§lADMIN PANEL") // Perbaikan typo title bold [cite: 27, 59]
         .button("- Chat Filter Settings\n§8Konfigurasi Anti-Spam", "textures/ui/settings_glyph_color")
         .button("- Chat Format Settings\n§8Atur tampilan chat", "textures/ui/comment")
         .button("§c- Mute/Unmute\n§8Bisukan pemain", "textures/ui/mute_off")
@@ -61,7 +59,7 @@ export function openAdminPanel(player) {
     mainForm.show(player).then((res) => {
         if (res.canceled) return;
         
-        // Memastikan eksekusi berdasarkan pilihan (selection)
+        // Eksekusi berdasarkan selection index [cite: 66, 135]
         switch (res.selection) {
             case 0: openFilterSettings(player); break;
             case 1: openChatFormatSettings(player); break;
@@ -73,7 +71,7 @@ export function openAdminPanel(player) {
                 world.sendMessage("\n".repeat(25) + "§aChat telah dibersihkan oleh Admin.");
                 break;
         }
-    }).catch((err) => console.error("Error UI Admin Panel: ", err)); // Penanganan error [cite: 50]
+    }).catch((err) => console.error("Error UI Admin Panel: ", err)); [cite: 60, 105]
 }
 
 // --- 5. FUNGSI PENDUKUNG ---
@@ -87,8 +85,10 @@ function openPlayerSelector(player, title, actionFunction) {
         .show(player).then((res) => {
             if (res.canceled) return openAdminPanel(player);
             
-            // Validasi keberadaan target sebelum eksekusi [cite: 21, 22]
-            const target = players[res.formValues?.[0]];
+            // Penggunaan optional chaining (?.) untuk keamanan 
+            const selectionIndex = res.formValues?.[0];
+            const target = players[selectionIndex];
+            
             if (target) {
                 actionFunction(player, target);
             } else {
@@ -98,7 +98,7 @@ function openPlayerSelector(player, title, actionFunction) {
 }
 
 function clearEnderChest(admin, target) {
-    // Loop dari slot 0-26 untuk membersihkan seluruh Ender Chest 
+    // Loop 27 slot untuk membersihkan total 
     for (let i = 0; i < 27; i++) {
         admin.runCommandAsync(`replaceitem entity "${target.name}" slot.enderchest ${i} air`);
     }
@@ -125,7 +125,7 @@ function openInventorySee(player) {
                 const item = inv.getItem(i);
                 if (item) {
                     isEmpty = false;
-                    // Pembersihan string nama item [cite: 23]
+                    // Pembersihan teks identifier item [cite: 33]
                     const itemName = item.typeId.replace("minecraft:", "");
                     itemList += `§7[${i}] §f${itemName} §7(x${item.amount})\n`;
                 }
@@ -139,7 +139,7 @@ function openInventorySee(player) {
         });
 }
 
-// Logika Mute & Freeze tetap sama namun menggunakan Backticks (`) untuk string dinamis
+// Logika String Dinamis dengan Backticks [cite: 163]
 function toggleMute(admin, target) {
     if (target.hasTag("muted")) {
         target.removeTag("muted");
@@ -160,7 +160,6 @@ function toggleFreeze(admin, target) {
     }
 }
 
-// Fungsi filter dan format chat (Sederhana)
 function openFilterSettings(player) {
     new ModalFormData().title("Filter Settings")
         .toggle("Master Disable", false)
