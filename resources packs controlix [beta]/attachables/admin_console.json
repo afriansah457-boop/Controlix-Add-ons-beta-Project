@@ -2,7 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "controlix:admin_panel",
+      "identifier": "controlix:admin_console",
       "materials": { "default": "entity_alphatest" },
       "textures": { "default": "textures/items/admin_console" },
       "geometry": { "default": "geometry.admin_console" },
