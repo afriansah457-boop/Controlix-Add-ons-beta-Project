@@ -23,8 +23,17 @@ world.beforeEvents.chatSend.subscribe((event) => {
                 .title("§lBuat Rank Baru")
                 .textField("Nama Rank:", "Contoh: Citizen")
                 .dropdown("Warna Rank:", ["§fPutih", "§cMerah", "§eKuning", "§aHijau", "§bBiru", "§dPink"])// Perbaikan: Pastikan semua argumen (label, placeholder, defaultValue) adalah string yang valid [cite: 13, 89, 90]
+                .// Baris 26-27: Definisi input teks dan penanganan hasil (UI)
                 .textField("Harga (Credix):", "Masukkan harga...", "100") 
-                .show(player).then(res => {
+                .show(player).then((res) => {
+    // 1. Keamanan Form: Cegah crash jika pemain menutup menu (klik silang) 
+    if (!res || res.canceled || !res.formValues) return; 
+
+    // 2. Pengambilan Data: Data diambil berdasarkan urutan index [cite: 460]
+    const hargaInput = res.formValues[0]; 
+
+    // Lanjutkan logika kamu di sini (misalnya proses pembayaran)
+});
                     // Gunakan optional chaining (!res.formValues) untuk mencegah crash jika form ditutup paksa (ESC) [cite: 73, 91, 92, 142]
                     if (res.canceled || !res.formValues) return;
                     
