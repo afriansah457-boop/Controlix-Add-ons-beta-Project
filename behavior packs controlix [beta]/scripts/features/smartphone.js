@@ -22,19 +22,19 @@ world.beforeEvents.chatSend.subscribe((event) => {
             new ModalFormData()
                 .title("§lBuat Rank Baru")
                 .textField("Nama Rank:", "Contoh: Citizen")
-                .dropdown("Warna Rank:", ["§fPutih", "§cMerah", "§eKuning", "§aHijau", "§bBiru", "§dPink"])
-// Baris 26: Pastikan format (label, placeholder, defaultValue)
-.textField("Harga (Credix):", "Contoh: 100", "100") 
-.show(player).then(res => {
-    //  Gunakan optional chaining untuk mencegah crash
-    if (res.canceled || !res.formValues) return;
-    
-    const [nama, warnaIdx, harga] = res.formValues;
-    const warnaKodes = ["§f", "§c", "§e", "§a", "§b", "§d"];
-    
-    // Pastikan harga dikonversi ke angka dengan aman
-    const hargaFinal = parseInt(harga) || 0;
-    const rankData = { nama, warna: warnaKodes[warnaIdx], harga: hargaFinal };
+                .dropdown("Warna Rank:", ["§fPutih", "§cMerah", "§eKuning", "§aHijau", "§bBiru", "§dPink"])// Perbaikan: Pastikan semua argumen (label, placeholder, defaultValue) adalah string yang valid [cite: 13, 89, 90]
+                .textField("Harga (Credix):", "Masukkan harga...", "100") 
+                .show(player).then(res => {
+                    // Gunakan optional chaining (!res.formValues) untuk mencegah crash jika form ditutup paksa (ESC) [cite: 73, 91, 92, 142]
+                    if (res.canceled || !res.formValues) return;
+                    
+                    const [nama, warnaIdx, harga] = res.formValues;
+                    const warnaKodes = ["§f", "§c", "§e", "§a", "§b", "§d"];
+                    
+                    // Konversi input string harga menjadi integer secara aman [cite: 73]
+                    const hargaFinal = parseInt(harga) || 0;
+                    const rankData = { nama, warna: warnaKodes[warnaIdx], harga: hargaFinal };
+                    
                     // Database Rank dengan penanganan error JSON
                     let existingRanks = [];
                     try {
