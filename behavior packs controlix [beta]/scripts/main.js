@@ -21,7 +21,7 @@ world.beforeEvents.chatSend.subscribe((event) => {
 // --- 2. ITEM USE SENSOR (Smartphone & Admin Panel) ---
 world.afterEvents.itemUse.subscribe((event) => {
     const { source: player, itemStack } = event;
-    if (!itemStack) return;
+    if (!itemStack) return; // Mencegah error tangan kosong [cite: 10, 150]
 
     const typeId = itemStack.typeId;
 
@@ -37,7 +37,7 @@ world.afterEvents.itemUse.subscribe((event) => {
                 openAdminPanel(player);
             } else {
                 player.sendMessage("§c[ERROR] Kamu tidak memiliki akses admin!");
-                player.playSound("note.bass"); // Feedback suara gagal 
+                player.playSound("note.bass"); // Feedback suara gagal [cite: 14, 21]
             }
         }
     });
@@ -52,32 +52,31 @@ world.afterEvents.itemUseOn.subscribe((event) => {
     
     if (!isUserAdmin) {
         player.sendMessage("§c[ERROR] Hanya Admin yang dapat menggunakan alat ini.");
+        player.playSound("note.bass");
         return;
     }
 
     const { x, y, z } = block.location;
-    // Mengambil Dynamic Property (Kembaliannya bisa string atau undefined)
     const titik1Raw = player.getDynamicProperty("titik_1");
 
     if (titik1Raw === undefined) {
         // SET TITIK 1
         player.setDynamicProperty("titik_1", `${x},${y},${z}`);
         player.sendMessage(`§b[LAND CLAIM]§f Titik 1 disetel pada: §a${x}, ${y}, ${z}`);
-        player.playSound("random.orb");
+        player.playSound("random.levelup");
     } else {
         // SET TITIK 2 & BUKA MENU
         const koordinat2 = `${x},${y},${z}`;
         player.sendMessage(`§b[LAND CLAIM]§f Titik 2 disetel pada: §a${x}, ${y}, ${z}`);
 
-        // Ambil list nama pemain untuk keperluan menu dropdown di UI
-        const playerNames = world.getAllPlayers().map(p => p.name); [cite: 9, 14]
+        // Ambil list nama pemain untuk dropdown UI [cite: 9, 36, 127]
+        const playerNames = world.getAllPlayers().map(p => p.name); 
         
         system.run(() => {
-            // Memanggil fungsi menu lahan
             bukaMenuLahan(player, playerNames, titik1Raw, koordinat2);
         });
 
-        // Reset koordinat setelah menu terbuka agar bisa membuat klaim baru 
+        // Reset properti agar bisa klaim area baru [cite: 12, 13]
         player.setDynamicProperty("titik_1", undefined);
     }
 });
