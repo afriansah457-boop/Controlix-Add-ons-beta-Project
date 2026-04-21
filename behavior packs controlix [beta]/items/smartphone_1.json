@@ -12,7 +12,7 @@
         "value": "§aSmartphone"
       },
       "minecraft:icon": {
-        "texture": "smartphone_1_icon"
+        "texture": "textures/items/smartphone_1_icon"
       },
       "minecraft:hand_equipped": true,
       "minecraft:stacked_by_data": true
