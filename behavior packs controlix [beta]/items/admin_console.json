@@ -4,7 +4,7 @@
     "description": {
       "identifier": "controlix:admin_console",
       "menu_category": {
-        "category": "equipment"
+        "category": "items"
       }
     },
     "components": {
@@ -12,10 +12,9 @@
         "value": "§aAdmin console"
       },
       "minecraft:icon": {
-        "texture": "textures/items/admin_console"
+        "texture": "admin_console"
       },
-      "minecraft:hand_equipped": true,
-      "minecraft:stacked_by_data": true
+      "minecraft:max_stack_size": 1
     }
   }
 }
