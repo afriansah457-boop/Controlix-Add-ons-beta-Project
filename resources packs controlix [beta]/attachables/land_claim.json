@@ -14,12 +14,17 @@
       "geometry": {
         "default": "geometry.land_claim"
       },
-      "scripts": {
-        "parent_setup": "variable.item_layer_num = 0;"
+      "animations": {
+        "tpp_hold": "animation.land_claim.tpp",
+        "fpp_hold": "animation.land_claim.fpp"
       },
-      "render_controllers": [
-        "controller.render.item_default"
-      ]
+      "scripts": {
+        "animate": [
+          {"tpp_hold": "c.is_first_person == 0"},
+          {"fpp_hold": "c.is_first_person == 1"}
+        ]
+      },
+      "render_controllers": [ "controller.render.item_default" ]
     }
   }
 }
