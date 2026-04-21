@@ -1,0 +1,13 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "controlix:admin_panel",
+      "materials": { "default": "entity_alphatest" },
+      "textures": { "default": "textures/items/admin_console" },
+      "geometry": { "default": "geometry.admin_console" },
+      "scripts": { "parent_setup": "variable.item_layer_num = 0;" },
+      "render_controllers": [ "controller.render.item_default" ]
+    }
+  }
+}
