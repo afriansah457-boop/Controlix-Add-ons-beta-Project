@@ -2,11 +2,24 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "controlix:land_claim",
-      "materials": { "default": "entity_alphatest" },
-      "textures": { "default": "textures/items/land_claim" },
-      "geometry": { "default": "geometry.land_claim" },
-      "render_controllers": [ "controller.render.item_default" ]
+      "identifier": "controlix:admin_console",
+      "materials": {
+        "default": "entity_alphatest",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/items/admin_console",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.admin_console"
+      },
+      "scripts": {
+        "parent_setup": "variable.item_layer_num = 0;"
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ]
     }
   }
 }
