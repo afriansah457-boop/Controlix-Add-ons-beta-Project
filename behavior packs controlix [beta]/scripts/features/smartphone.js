@@ -26,14 +26,14 @@ world.beforeEvents.chatSend.subscribe((event) => {
                 .// Baris 26-27: Definisi input teks dan penanganan hasil (UI)
                 .textField("Harga (Credix):", "Masukkan harga...", "100") 
                 .show(player).then((res) => {
-    // 1. Keamanan Form: Cegah crash jika pemain menutup menu (klik silang) 
-    if (!res || res.canceled || !res.formValues) return; 
+                  // 1. Keamanan Form: Cegah crash jika pemain menutup menu (klik silang) 
+                   if (!res || res.canceled || !res.formValues) return; 
 
-    // 2. Pengambilan Data: Data diambil berdasarkan urutan index [cite: 460]
-    const hargaInput = res.formValues[0]; 
+                     // 2. Pengambilan Data: Data diambil berdasarkan urutan index [cite: 460]
+                      const hargaInput = res.formValues[0]; 
 
-    // Lanjutkan logika kamu di sini (misalnya proses pembayaran)
-});
+                      // Lanjutkan logika kamu di sini (misalnya proses pembayaran)
+                    });
                     // Gunakan optional chaining (!res.formValues) untuk mencegah crash jika form ditutup paksa (ESC) [cite: 73, 91, 92, 142]
                     if (res.canceled || !res.formValues) return;
                     
