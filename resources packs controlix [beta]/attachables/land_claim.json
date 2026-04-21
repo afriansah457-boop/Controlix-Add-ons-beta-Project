@@ -15,8 +15,8 @@
         "default": "geometry.land_claim"
       },
       "animations": {
-        "tpp_hold": "animation.land_claim.tpp",
-        "fpp_hold": "animation.land_claim.fpp"
+        "tpp_hold": "animation.self_ink_stemp.tpp",
+        "fpp_hold": "animation.self_ink_stemp.fpp"
       },
       "scripts": {
         "animate": [
