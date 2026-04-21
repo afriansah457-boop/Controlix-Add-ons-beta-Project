@@ -36,7 +36,7 @@ world.beforeEvents.chatSend.subscribe((event) => {
     // Batalkan pesan asli segera agar tidak muncul dobel di chat 
     event.cancel = true;
 
-    system.run(() => {
+    system.run() => {
         // Perintah Admin Login
         if (msg === "!admin") {
             return openAdminLogin(player);
