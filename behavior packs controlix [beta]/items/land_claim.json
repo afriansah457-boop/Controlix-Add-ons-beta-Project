@@ -4,7 +4,7 @@
     "description": {
       "identifier": "controlix:land_claim",
       "menu_category": {
-        "category": "items"
+        "category": "equipment"
       }
     },
     "components": {
