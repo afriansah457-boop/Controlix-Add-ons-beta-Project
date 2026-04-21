@@ -12,7 +12,7 @@
         "value": "§b§lLand Claim Tool"
       },
       "minecraft:icon": {
-        "texture": "land_claim"
+        "texture": "land_claim_icon"
       },
       "minecraft:max_stack_size": 1
     }
