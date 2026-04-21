@@ -9,8 +9,9 @@ world.beforeEvents.chatSend.subscribe((event) => {
     const { sender: player, message } = event;
 
     if (message.toLowerCase() === "!admin") {
-        event.cancel = true;
-        // Gunakan system.run agar UI muncul setelah chat dibatalkan
+        event.cancel = true; // Batalkan pesan agar tidak muncul di chat [cite: 3]
+        
+        // Menjalankan UI di tick berikutnya agar sinkron
         system.run(() => {
             openAdminLogin(player);
         });
@@ -20,20 +21,23 @@ world.beforeEvents.chatSend.subscribe((event) => {
 // --- 2. ITEM USE SENSOR (Smartphone & Admin Panel) ---
 world.afterEvents.itemUse.subscribe((event) => {
     const { source: player, itemStack } = event;
+    if (!itemStack) return;
+
     const typeId = itemStack.typeId;
 
-    // Gunakan system.run untuk semua pembukaan UI agar stabil
     system.run(() => {
+        // Cek Smartphone
         if (typeId === "controlix:smartphone_1") {
             openSmartphoneUI(player);
         } 
+        // Cek Admin Panel
         else if (typeId === "controlix:admin_console") { 
-            // Cek role atau tag admin
             const isUserAdmin = player.getDynamicProperty("role") === "admin" || player.hasTag("admin");
             if (isUserAdmin) {
                 openAdminPanel(player);
             } else {
-                player.sendMessage("§c[ERROR] Kamu tidak memiliki akses admin.");
+                player.sendMessage("§c[ERROR] Kamu tidak memiliki akses admin!");
+                player.playSound("note.bass"); // Feedback suara gagal 
             }
         }
     });
@@ -42,37 +46,38 @@ world.afterEvents.itemUse.subscribe((event) => {
 // --- 3. CLICK ON BLOCK SENSOR (Land Claim) ---
 world.afterEvents.itemUseOn.subscribe((event) => {
     const { source: player, itemStack, block } = event;
+    if (!itemStack || itemStack.typeId !== "controlix:land_claim") return;
+
+    const isUserAdmin = player.getDynamicProperty("role") === "admin" || player.hasTag("admin");
     
-    if (itemStack.typeId === "controlix:land_claim") {
-        const isUserAdmin = player.getDynamicProperty("role") === "admin" || player.hasTag("admin");
+    if (!isUserAdmin) {
+        player.sendMessage("§c[ERROR] Hanya Admin yang dapat menggunakan alat ini.");
+        return;
+    }
+
+    const { x, y, z } = block.location;
+    // Mengambil Dynamic Property (Kembaliannya bisa string atau undefined)
+    const titik1Raw = player.getDynamicProperty("titik_1");
+
+    if (titik1Raw === undefined) {
+        // SET TITIK 1
+        player.setDynamicProperty("titik_1", `${x},${y},${z}`);
+        player.sendMessage(`§b[LAND CLAIM]§f Titik 1 disetel pada: §a${x}, ${y}, ${z}`);
+        player.playSound("random.orb");
+    } else {
+        // SET TITIK 2 & BUKA MENU
+        const koordinat2 = `${x},${y},${z}`;
+        player.sendMessage(`§b[LAND CLAIM]§f Titik 2 disetel pada: §a${x}, ${y}, ${z}`);
+
+        // Ambil list nama pemain untuk keperluan menu dropdown di UI
+        const playerNames = world.getAllPlayers().map(p => p.name); [cite: 9, 14]
         
-        if (!isUserAdmin) {
-            player.sendMessage("§c[ERROR] Hanya Admin yang dapat menggunakan alat ini.");
-            return;
-        }
+        system.run(() => {
+            // Memanggil fungsi menu lahan
+            bukaMenuLahan(player, playerNames, titik1Raw, koordinat2);
+        });
 
-        const { x, y, z } = block.location;
-        const titik1 = player.getDynamicProperty("titik_1");
-
-        if (!titik1) {
-            // SET TITIK 1
-            player.setDynamicProperty("titik_1", `${x},${y},${z}`);
-            player.sendMessage(`§b[LAND CLAIM]§f Titik 1 disetel pada: §a${x}, ${y}, ${z}`);
-            player.playSound("random.orb");
-        } else {
-            // SET TITIK 2 & BUKA MENU
-            const koordinat2 = `${x},${y},${z}`;
-            player.sendMessage(`§b[LAND CLAIM]§f Titik 2 disetel pada: §a${x}, ${y}, ${z}`);
-
-            // Perbaikan: Gunakan getAllPlayers()
-            const playerNames = world.getAllPlayers().map(p => p.name);
-            
-            system.run(() => {
-                bukaMenuLahan(player, playerNames, titik1, koordinat2);
-            });
-
-            // Reset koordinat setelah menu terbuka
-            player.setDynamicProperty("titik_1", undefined);
-        }
+        // Reset koordinat setelah menu terbuka agar bisa membuat klaim baru 
+        player.setDynamicProperty("titik_1", undefined);
     }
 });
