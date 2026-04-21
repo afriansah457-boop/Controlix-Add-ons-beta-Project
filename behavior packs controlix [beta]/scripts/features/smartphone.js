@@ -23,16 +23,18 @@ world.beforeEvents.chatSend.subscribe((event) => {
                 .title("§lBuat Rank Baru")
                 .textField("Nama Rank:", "Contoh: Citizen")
                 .dropdown("Warna Rank:", ["§fPutih", "§cMerah", "§eKuning", "§aHijau", "§bBiru", "§dPink"])
-                .textField("Harga (Credix):", "100", "100")
-                .show(player).then(res => {
-                    // Gunakan optional chaining untuk mencegah crash jika form ditutup paksa
-                    if (res.canceled || !res.formValues) return;
-                    
-                    const [nama, warnaIdx, harga] = res.formValues;
-                    const warnaKodes = ["§f", "§c", "§e", "§a", "§b", "§d"];
-                    
-                    const rankData = { nama, warna: warnaKodes[warnaIdx], harga: parseInt(harga) || 0 };
-                    
+// Baris 26: Pastikan format (label, placeholder, defaultValue)
+.textField("Harga (Credix):", "Contoh: 100", "100") 
+.show(player).then(res => {
+    //  Gunakan optional chaining untuk mencegah crash
+    if (res.canceled || !res.formValues) return;
+    
+    const [nama, warnaIdx, harga] = res.formValues;
+    const warnaKodes = ["§f", "§c", "§e", "§a", "§b", "§d"];
+    
+    // Pastikan harga dikonversi ke angka dengan aman
+    const hargaFinal = parseInt(harga) || 0;
+    const rankData = { nama, warna: warnaKodes[warnaIdx], harga: hargaFinal };
                     // Database Rank dengan penanganan error JSON
                     let existingRanks = [];
                     try {
