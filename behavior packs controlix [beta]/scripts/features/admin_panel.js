@@ -1,7 +1,7 @@
 import { world, system } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 
-const ADMIN_ITEM_ID = "controlix:admin_panel";
+const ADMIN_ITEM_ID = "controlix:admin_console";
 
 // --- 1. LOGIKA TICKING (Freeze System) ---
 system.runInterval(() => {
