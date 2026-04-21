@@ -2,20 +2,19 @@
   "format_version": "1.20.10",
   "minecraft:item": {
     "description": {
-      "identifier": "controlix:smartphone_1",
+      "identifier": "controlix:admin_console",
       "menu_category": {
-        "category": "equipment"
+        "category": "items"
       }
     },
     "components": {
       "minecraft:display_name": {
-        "value": "§aSmartphone"
+        "value": "§aSmartphone 1"
       },
       "minecraft:icon": {
-        "texture": "textures/items/smartphone_1_icon"
+        "texture": "smartphone_1"
       },
-      "minecraft:hand_equipped": true,
-      "minecraft:stacked_by_data": true
+      "minecraft:max_stack_size": 1
     }
   }
 }
