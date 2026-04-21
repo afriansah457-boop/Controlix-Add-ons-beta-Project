@@ -67,17 +67,20 @@ export function openAdminPanel(player) {
             case 3: openPlayerSelector(player, "Freeze Control", toggleFreeze); break;
             case 4: openPlayerSelector(player, "Clear Ender Chest", clearEnderChest); break;
             case 5: openInventorySee(player); break;
-            case 6: 
+case 6: 
                 world.sendMessage("\n".repeat(25) + "§aChat telah dibersihkan oleh Admin.");
                 break;
         }
-    }).catch((err) => console.error("Error UI Admin Panel: ", err)); [cite: 60, 105]
-}
+    }).catch((err) => {
+        console.error("Error UI Admin Panel: ", err);
+    }); // <--- PENUTUP .catch HARUS SEPERTI INI
+} // <--- KURUNG INI PENTING UNTUK MENUTUP FUNGSI openAdminPanel
 
 // --- 5. FUNGSI PENDUKUNG ---
 function openPlayerSelector(player, title, actionFunction) {
     const players = world.getAllPlayers();
     if (players.length === 0) return player.sendMessage("§cTidak ada pemain online.");
+    const names = players.map(p => p.name); // <--- Baris ini biasanya yang memicu error ']' jika tidak lengkap
     const names = players.map(p => p.name);
     
     new ModalFormData().title(title)
