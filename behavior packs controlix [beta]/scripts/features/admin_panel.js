@@ -5,9 +5,11 @@ const ADMIN_ITEM_ID = "controlix:admin_console";
 
 // --- INITIALIZATION ---
 // Inisialisasi status world jika belum ada
-if (world.getDynamicProperty("private_world") === undefined) {
-    world.setDynamicProperty("private_world", false);
-}
+system.run(() => {
+    if (world.getDynamicProperty("private_world") === undefined) {
+        world.setDynamicProperty("private_world", false);
+    }
+});
 
 // --- 1. LOGIKA TICKING (Freeze System) ---
 system.runInterval(() => {
