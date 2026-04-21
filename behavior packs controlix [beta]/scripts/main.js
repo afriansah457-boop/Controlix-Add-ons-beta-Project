@@ -61,7 +61,7 @@ world.beforeEvents.chatSend.subscribe((event) => {
             else if (player.hasTag("admin")) prefix = "§e[ADMIN]";
             else if (player.hasTag("worker")) prefix = "§a[WORKER]";
 
-            world.sendMessage(`${prefix} §f${rpName}: ${message}`);
+            world.sendMessage(`${prefix} ${rpName}: ${message}`);
         } else {
             player.sendMessage("§c[!] Selesaikan registrasi dulu untuk bicara!");
         }
