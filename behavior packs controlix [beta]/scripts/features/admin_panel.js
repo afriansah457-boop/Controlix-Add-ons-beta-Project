@@ -3,11 +3,16 @@ import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 
 const ADMIN_ITEM_ID = "controlix:admin_console";
 
+// --- INITIALIZATION ---
+// Inisialisasi status world jika belum ada
+if (world.getDynamicProperty("private_world") === undefined) {
+    world.setDynamicProperty("private_world", false);
+}
+
 // --- 1. LOGIKA TICKING (Freeze System) ---
 system.runInterval(() => {
     for (const player of world.getAllPlayers()) {
         if (player.hasTag("frozen")) {
-            // Memaksa posisi pemain tetap agar tidak bisa bergerak [cite: 12, 63]
             player.teleport(player.location, { checkForBlocks: false });
         }
     }
@@ -16,40 +21,74 @@ system.runInterval(() => {
 // --- 2. LOGIKA CHAT (Mute System) ---
 world.beforeEvents.chatSend.subscribe((event) => {
     if (event.sender.hasTag("muted")) {
-        event.cancel = true; // Batalkan pesan agar tidak terkirim [cite: 13, 64]
+        event.cancel = true;
         system.run(() => {
             event.sender.sendMessage("§cKamu sedang dimute oleh admin!");
         });
     }
 });
 
-// --- 3. TRIGGER ITEM (Optimasi afterEvents) ---
+// --- 3. LOGIKA PROTEKSI WORLD (Private World System) ---
+// Proteksi Pasang Blok
+world.beforeEvents.playerPlaceBlock.subscribe((event) => {
+    const player = event.player;
+    const isPrivate = world.getDynamicProperty("private_world");
+    const isAdmin = player.hasTag("admin");
+
+    if (isPrivate && !isAdmin) {
+        // Cek apakah blok tempat menaruh ada tag "land_claim"
+        // Catatan: Pada Bedrock API, pengecekan tag pada lokasi blok spesifik 
+        // biasanya dilakukan via koordinat atau pengecekan tag entitas land.
+        if (!player.hasTag("in_land_claim")) { 
+            event.cancel = true;
+            system.run(() => player.sendMessage("§cPrivate World AKTIF! Kamu hanya bisa build di area Land Claim."));
+        }
+    }
+});
+
+// Proteksi Hancurkan Blok
+world.beforeEvents.playerBreakBlock.subscribe((event) => {
+    const player = event.player;
+    const isPrivate = world.getDynamicProperty("private_world");
+    const isAdmin = player.hasTag("admin");
+
+    if (isPrivate && !isAdmin) {
+        if (!player.hasTag("in_land_claim")) {
+            event.cancel = true;
+            system.run(() => player.sendMessage("§cPrivate World AKTIF! Jangan merusak fasilitas umum."));
+        }
+    }
+});
+
+// --- 4. TRIGGER ITEM ---
 world.afterEvents.itemUse.subscribe((data) => {
     const player = data.source;
     const itemStack = data.itemStack;
 
-    // Validasi tangan kosong untuk mencegah error log 
     if (!itemStack) return;
 
     if (itemStack.typeId === ADMIN_ITEM_ID) {
         const isAdmin = player.hasTag("admin") || player.getDynamicProperty("role") === "admin";
         
         if (isAdmin) {
-            // Gunakan system.run agar UI muncul stabil 
             system.run(() => openAdminPanel(player));
         } else {
             player.sendMessage("§c[ERROR] Anda tidak memiliki akses admin!");
-            player.playSound("note.bass"); // Feedback audio penolakan [cite: 48, 55, 134]
+            player.playSound("note.bass");
         }
     }
 });
 
-// --- 4. MENU UTAMA ---
+// --- 5. MENU UTAMA ---
 export function openAdminPanel(player) {
+    const isPrivate = world.getDynamicProperty("private_world");
+    const statusText = isPrivate ? "§aON" : "§cOFF";
+
     const mainForm = new ActionFormData()
-        .title("§lADMIN PANEL") // Perbaikan typo title bold [cite: 27, 59]
-        .button("- Chat Filter Settings\n§8Konfigurasi Anti-Spam", "textures/ui/settings_glyph_color")
-        .button("- Chat Format Settings\n§8Atur tampilan chat", "textures/ui/comment")
+        .title("§lADMIN PANEL")
+        .button(`§6- Private World [${statusText}]\n§8Status: ${isPrivate ? 'Admin Only' : 'Public'}`, "textures/ui/world_glyph_color")
+        .button("- Chat Filter Settings\n§8Anti-Spam", "textures/ui/settings_glyph_color")
+        .button("- Chat Format Settings\n§8Custom Chat", "textures/ui/comment")
         .button("§c- Mute/Unmute\n§8Bisukan pemain", "textures/ui/mute_off")
         .button("§b- Freeze/Unfreeze\n§8Bekukan pemain", "textures/items/snowball")
         .button("§d- Clear Ender Chest\n§8Hapus isi EC", "textures/blocks/ender_chest")
@@ -59,54 +98,65 @@ export function openAdminPanel(player) {
     mainForm.show(player).then((res) => {
         if (res.canceled) return;
         
-        // Eksekusi berdasarkan selection index [cite: 66, 135]
         switch (res.selection) {
-            case 0: openFilterSettings(player); break;
-            case 1: openChatFormatSettings(player); break;
-            case 2: openPlayerSelector(player, "Mute Control", toggleMute); break;
-            case 3: openPlayerSelector(player, "Freeze Control", toggleFreeze); break;
-            case 4: openPlayerSelector(player, "Clear Ender Chest", clearEnderChest); break;
-            case 5: openInventorySee(player); break;
-            case 6: 
-                world.sendMessage("\n".repeat(25) + "§aChat telah dibersihkan oleh Admin.");
-                break;
+            case 0: openPrivateWorldAuth(player); break;
+            case 1: openFilterSettings(player); break;
+            case 2: openChatFormatSettings(player); break;
+            case 3: openPlayerSelector(player, "Mute Control", toggleMute); break;
+            case 4: openPlayerSelector(player, "Freeze Control", toggleFreeze); break;
+            case 5: openPlayerSelector(player, "Clear Ender Chest", clearEnderChest); break;
+            case 6: openInventorySee(player); break;
+            case 7: world.sendMessage("\n".repeat(25) + "§aChat telah dibersihkan oleh Admin."); break;
         }
-    }).catch((err) => {
-        console.error("Error UI Admin Panel: ", err);
-    }); // <--- PENUTUP .catch HARUS SEPERTI INI
-} // <--- KURUNG INI PENTING UNTUK MENUTUP FUNGSI openAdminPanel
+    });
+}
 
-// --- 5. FUNGSI PENDUKUNG ---
+// --- 6. LOGIKA PRIVATE WORLD AUTH (PIN & CODE) ---
+function openPrivateWorldAuth(player) {
+    new ModalFormData()
+        .title("§k||§r §lSECURITY CHECK §k||")
+        .textField("Masukkan PIN Admin:", "admin****")
+        .textField("Masukkan Secret CODE:", "1XXXX")
+        .show(player).then((res) => {
+            if (res.canceled) return openAdminPanel(player);
+            
+            const [inputPin, inputCode] = res.formValues;
+
+            if (inputPin === "admin4*" && inputCode === "10752") {
+                const currentState = world.getDynamicProperty("private_world");
+                world.setDynamicProperty("private_world", !currentState);
+                
+                const newState = !currentState;
+                player.sendMessage(`§e[SYSTEM] Private World berhasil diubah ke: ${newState ? "§aON" : "§cOFF"}`);
+                world.sendMessage(`§l§6SERVER NOTIF: §rPrivate World status changed to ${newState ? "§aON" : "§cOFF"}`);
+                player.playSound("random.levelup");
+            } else {
+                player.sendMessage("§4[ERROR] PIN atau CODE Salah! Akses Ditolak.");
+                player.playSound("note.bass");
+            }
+        });
+}
+
+// --- 7. FUNGSI PENDUKUNG (Original) ---
 function openPlayerSelector(player, title, actionFunction) {
     const players = world.getAllPlayers();
     if (players.length === 0) return player.sendMessage("§cTidak ada pemain online.");
-    const names = players.map(p => p.name); // <--- Baris ini biasanya yang memicu error ']' jika tidak lengkap
     const names = players.map(p => p.name);
     
     new ModalFormData().title(title)
         .dropdown("Pilih Target Player:", names)
         .show(player).then((res) => {
             if (res.canceled) return openAdminPanel(player);
-            
-            // Penggunaan optional chaining (?.) untuk keamanan 
-            const selectionIndex = res.formValues?.[0];
-            const target = players[selectionIndex];
-            
-            if (target) {
-                actionFunction(player, target);
-            } else {
-                player.sendMessage("§cPemain sudah tidak ada di server.");
-            }
+            const target = players[res.formValues?.[0]];
+            if (target) actionFunction(player, target);
         });
 }
 
 function clearEnderChest(admin, target) {
-    // Loop 27 slot untuk membersihkan total 
     for (let i = 0; i < 27; i++) {
         admin.runCommandAsync(`replaceitem entity "${target.name}" slot.enderchest ${i} air`);
     }
     admin.sendMessage(`§dEnder Chest ${target.name} telah dikosongkan.`);
-    admin.playSound("random.orb");
 }
 
 function openInventorySee(player) {
@@ -128,7 +178,6 @@ function openInventorySee(player) {
                 const item = inv.getItem(i);
                 if (item) {
                     isEmpty = false;
-                    // Pembersihan teks identifier item [cite: 33]
                     const itemName = item.typeId.replace("minecraft:", "");
                     itemList += `§7[${i}] §f${itemName} §7(x${item.amount})\n`;
                 }
@@ -142,7 +191,6 @@ function openInventorySee(player) {
         });
 }
 
-// Logika String Dinamis dengan Backticks [cite: 163]
 function toggleMute(admin, target) {
     if (target.hasTag("muted")) {
         target.removeTag("muted");
