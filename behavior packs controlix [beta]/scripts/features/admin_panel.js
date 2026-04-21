@@ -67,7 +67,7 @@ export function openAdminPanel(player) {
             case 3: openPlayerSelector(player, "Freeze Control", toggleFreeze); break;
             case 4: openPlayerSelector(player, "Clear Ender Chest", clearEnderChest); break;
             case 5: openInventorySee(player); break;
-case 6: 
+            case 6: 
                 world.sendMessage("\n".repeat(25) + "§aChat telah dibersihkan oleh Admin.");
                 break;
         }
