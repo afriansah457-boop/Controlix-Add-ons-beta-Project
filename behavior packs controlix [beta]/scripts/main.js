@@ -92,7 +92,7 @@ world.afterEvents.itemUse.subscribe((event) => {
 });
 
 // --- 4. CLICK ON BLOCK SENSOR (Sistem Land Claim) ---
-world.afterEvents.itemUseOn.subscribe((event) => {
+world.afterEvents.itemUse.subscribe((event) => {
     const { source: player, itemStack, block } = event;
     if (!itemStack || itemStack.typeId !== "controlix:land_claim") return;
 
