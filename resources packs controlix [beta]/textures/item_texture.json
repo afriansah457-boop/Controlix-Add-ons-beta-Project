@@ -3,13 +3,13 @@
   "texture_name": "atlas.items",
   "texture_data": {
     "smartphone_1": {
-      "textures": "textures/items/smartphone_1"
+      "textures": "textures/items/smartphone_1_icon"
     },
     "land_claim": {
-      "textures": "textures/items/land_claim"
+      "textures": "textures/items/land_claim_icon"
     },
     "admin_console": {
-      "textures": "textures/items/admin_console"
+      "textures": "textures/items/admin_console_icon"
     }
   }
 }
