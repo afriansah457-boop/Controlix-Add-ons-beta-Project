@@ -4,7 +4,7 @@
     "description": {
       "identifier": "controlix:admin_console",
       "menu_category": {
-        "category": "items"
+        "category": "equipment"
       }
     },
     "components": {
