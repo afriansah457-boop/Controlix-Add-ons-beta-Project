@@ -36,10 +36,5 @@ export function openRegistrationMenu(player) {
 
         player.sendMessage(`§aSelamat datang, §f${name}§a! Kamu telah terdaftar.`);
         player.playSound("random.levelup");
-        // Contoh command: !resetregis @p
-if (message.startsWith("!resetregis")) {
-    player.setDynamicProperty("is_registered", undefined);
-    player.sendMessage("§eData registrasi telah direset.");
-}
     });
 }
