@@ -6,15 +6,15 @@ import { ModalFormData } from "@minecraft/server-ui";
  * @param {string[]} playerNames
  */
 export function bukaMenuLahan(player, playerNames, titik1, titik2) {
-  // PROTEKSI: Jika koordinat hilang, jangan buka UI
+  // PROTEKSI: Jika koordinat hilang
   if (!titik1 || !titik2) {
     return player.sendMessage("§c[ERROR] Koordinat belum lengkap! Pastikan set Titik 1 dan Titik 2.");
   }
 
-  // PROTEKSI: Pastikan playerNames adalah array dan tidak kosong
+  // PROTEKSI: Pastikan playerNames valid & filter jika ada null/undefined
   let listPemain = ["Tidak ada pemain"];
   if (Array.isArray(playerNames) && playerNames.length > 0) {
-    listPemain = playerNames;
+    listPemain = playerNames.filter(name => name !== undefined);
   }
 
   const landMenu = new ModalFormData()
@@ -24,49 +24,53 @@ export function bukaMenuLahan(player, playerNames, titik1, titik2) {
     .textField("Harga (Isi 0 jika Private):", "0")
     .dropdown("Pilih Pemilik Awal:", listPemain);
 
-  landMenu.show(player).then((result) => {
-    if (result.canceled) {
-      player.sendMessage("§e[INFO] Pendaftaran lahan dibatalkan.");
-      return; 
-    }
+  // Gunakan system.run untuk memastikan UI terbuka di frame yang aman
+  system.run(() => {
+    landMenu.show(player).then((result) => {
+      if (result.canceled) {
+        player.sendMessage("§e[INFO] Pendaftaran lahan dibatalkan.");
+        return; 
+      }
 
-    const [inputNamaLahan, inputStatusIndex, inputHarga, selectPemainIndex] = result.formValues;
-    const inputPemilik = listPemain[selectPemainIndex];
+      const [inputNamaLahan, inputStatusIndex, inputHarga, selectPemainIndex] = result.formValues;
+      const inputPemilik = listPemain[selectPemainIndex];
 
-    // Validasi Nama Lahan
-    if (!inputNamaLahan || inputNamaLahan.trim() === "") {
-      player.sendMessage("§c[ERROR] Nama Lahan tidak boleh kosong!");
-      return system.run(() => bukaMenuLahan(player, playerNames, titik1, titik2)); 
-    }
+      // Validasi Nama Lahan
+      if (!inputNamaLahan || inputNamaLahan.trim() === "") {
+        player.sendMessage("§c[ERROR] Nama Lahan tidak boleh kosong!");
+        // Rekursif aman dengan system.run
+        return system.run(() => bukaMenuLahan(player, playerNames, titik1, titik2)); 
+      }
 
-    // Validasi Harga
-    const hargaFinal = Number(inputHarga);
-    if (inputStatusIndex === 1 && (isNaN(hargaFinal) || inputHarga.trim() === "")) {
-      player.sendMessage("§c[ERROR] Harga harus berupa angka!");
-      return system.run(() => bukaMenuLahan(player, playerNames, titik1, titik2));
-    }
+      // Validasi Harga
+      const hargaFinal = Number(inputHarga);
+      if (inputStatusIndex === 1 && (isNaN(hargaFinal) || inputHarga.trim() === "")) {
+        player.sendMessage("§c[ERROR] Harga harus berupa angka jika status 'Dijual'!");
+        return system.run(() => bukaMenuLahan(player, playerNames, titik1, titik2));
+      }
 
-    const dataLahanBaru = {
-      nama: inputNamaLahan,
-      status: inputStatusIndex === 0 ? "Private" : "Dijual",
-      harga: hargaFinal,
-      pemilik: inputPemilik,
-      koordinat: { t1: titik1, t2: titik2 },
-      timestamp: Date.now()
-    };
+      const dataLahanBaru = {
+        nama: inputNamaLahan,
+        status: inputStatusIndex === 0 ? "Private" : "Dijual",
+        harga: hargaFinal,
+        pemilik: inputPemilik,
+        koordinat: { t1: titik1, t2: titik2 },
+        timestamp: Date.now()
+      };
 
-    simpanDataLahan(dataLahanBaru);
-    player.sendMessage(`§a[SUKSES] Lahan '§f${inputNamaLahan}§a' berhasil disimpan!`);
-  }).catch((err) => {
-    console.error("Gagal membuka menu lahan: " + err);
+      simpanDataLahan(dataLahanBaru, player);
+    }).catch((err) => {
+      console.error("Gagal membuka menu lahan: " + err);
+    });
   });
 }
 
-function simpanDataLahan(dataBaru) {
+function simpanDataLahan(dataBaru, player) {
   let semuaLahan = [];
+  // Perbaikan: world.getDynamicProperty harus dipastikan tipenya string
   const dataLama = world.getDynamicProperty("data_lahan_server");
   
-  if (dataLama) {
+  if (typeof dataLama === "string") {
     try {
       semuaLahan = JSON.parse(dataLama);
     } catch (e) {
@@ -76,12 +80,20 @@ function simpanDataLahan(dataBaru) {
 
   semuaLahan.push(dataBaru);
   
-  // Batas DynamicProperty adalah 32,767 karakter. 
-  // Jika terlalu banyak, JSON.stringify akan gagal disimpan.
   const stringData = JSON.stringify(semuaLahan);
-  if (stringData.length > 32000) {
-    world.sendMessage("§c[WARNING] Database lahan hampir penuh! Segera backup data.");
+
+  // Batas Limitasi Minecraft: 32,767 byte per property
+  if (stringData.length > 32700) {
+    player.sendMessage("§c[FATAL] Database lahan penuh! Tidak bisa menyimpan lahan baru.");
+    return;
   }
   
-  world.setDynamicProperty("data_lahan_server", stringData);
+  try {
+    world.setDynamicProperty("data_lahan_server", stringData);
+    player.sendMessage(`§a[SUKSES] Lahan '§f${dataBaru.nama}§a' berhasil disimpan!`);
+    player.playSound("random.levelup");
+  } catch (err) {
+    player.sendMessage("§c[ERROR] Gagal menulis ke database server.");
+    console.error(err);
+  }
 }
