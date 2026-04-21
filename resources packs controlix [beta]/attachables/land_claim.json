@@ -1,0 +1,12 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "controlix:land_claim",
+      "materials": { "default": "entity_alphatest" },
+      "textures": { "default": "textures/items/land_claim" },
+      "geometry": { "default": "geometry.land_claim" },
+      "render_controllers": [ "controller.render.item_default" ]
+    }
+  }
+}
