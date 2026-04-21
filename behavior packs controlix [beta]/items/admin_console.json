@@ -12,7 +12,7 @@
         "value": "§aAdmin console"
       },
       "minecraft:icon": {
-        "texture": "admin_console_icon"
+        "texture": "textures/items/admin_console_icon"
       },
       "minecraft:hand_equipped": true,
       "minecraft:stacked_by_data": true
