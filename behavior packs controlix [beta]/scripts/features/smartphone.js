@@ -16,102 +16,89 @@ system.run(() => {
     }
 });
 
-// --- 1. LOGIKA CHAT & COMMAND !createrank ---
-world.beforeEvents.chatSend.subscribe((event) => {
-    const { sender: player, message } = event;
-    const isAdmin = player.hasTag("admin") || player.getDynamicProperty("role") === "admin";
+// --- COMMAND !createrank (PINDAH TANPA BENTROK CHAT) ---
+if (world.beforeEvents?.chatSend) {
+    world.beforeEvents.chatSend.subscribe((event) => {
+        const player = event.sender;
+        const message = event.message;
 
-    // Command !createrank (Admin Only)
-    if (message.startsWith("!createrank")) {
+        if (!message.startsWith("!createrank")) return;
+
         event.cancel = true;
+
+        const isAdmin = player.hasTag("admin") || (player.getDynamicProperty("role") ?? "") === "admin";
 
         if (!isAdmin) {
             return system.run(() => player.sendMessage("§cHanya Admin yang bisa membuat rank!"));
         }
 
         system.run(() => {
-            new ModalFormData()
-                .title("§lBuat Rank Baru")
-                .textField("Nama Rank:", "Contoh: Citizen")
-                .dropdown("Warna Rank:", ["§fPutih", "§cMerah", "§eKuning", "§aHijau", "§bBiru", "§dPink"])
-                .textField("Harga (Credix):", "Masukkan harga...", {
-                    defaultValue: "100"
-                })
-                .show(player)
-                .then((res) => {
-                    if (!res || res.canceled || !res.formValues) return;
+            try {
+                new ModalFormData()
+                    .title("§lBuat Rank Baru")
+                    .textField("Nama Rank:", "Contoh: Citizen")
+                    .dropdown("Warna Rank:", ["§fPutih", "§cMerah", "§eKuning", "§aHijau", "§bBiru", "§dPink"])
+                    .textField("Harga (Credix):", "Masukkan harga...")
+                    .show(player)
+                    .then((res) => {
+                        if (!res || res.canceled || !res.formValues) return;
 
-                    const [nama, warnaIdx, hargaRaw] = res.formValues;
-                    const warnaKodes = ["§f", "§c", "§e", "§a", "§b", "§d"];
+                        const [nama, warnaIdx, hargaRaw] = res.formValues;
+                        const warnaKodes = ["§f", "§c", "§e", "§a", "§b", "§d"];
 
-                    if (!nama || nama.trim() === "") {
-                        return player.sendMessage("§cNama rank tidak boleh kosong!");
-                    }
+                        if (!nama || nama.trim() === "") {
+                            return player.sendMessage("§cNama rank tidak boleh kosong!");
+                        }
 
-                    const hargaFinal = isNaN(parseInt(hargaRaw)) ? 0 : parseInt(hargaRaw);
+                        const hargaFinal = parseInt(hargaRaw) || 0;
 
-                    const rankData = {
-                        nama: nama.trim(),
-                        warna: warnaKodes[warnaIdx] ?? "§f",
-                        harga: hargaFinal
-                    };
+                        const rankData = {
+                            nama: nama.trim(),
+                            warna: warnaKodes[warnaIdx] ?? "§f",
+                            harga: hargaFinal
+                        };
 
-                    let existingRanks = [];
-                    try {
-                        const savedData = world.getDynamicProperty("server_ranks");
-                        existingRanks = savedData ? JSON.parse(savedData) : [];
-                    } catch (e) {
-                        console.warn("Data corrupt, reset.");
-                        existingRanks = [];
-                    }
+                        let existingRanks = [];
+                        try {
+                            const savedData = world.getDynamicProperty("server_ranks");
+                            existingRanks = savedData ? JSON.parse(savedData) : [];
+                        } catch {
+                            existingRanks = [];
+                        }
 
-                    existingRanks.push(rankData);
+                        existingRanks.push(rankData);
 
-                    try {
                         world.setDynamicProperty("server_ranks", JSON.stringify(existingRanks));
-                        player.sendMessage(`§aRank ${rankData.warna}${rankData.nama} §aberhasil dibuat!`);
+
+                        player.sendMessage(`§aRank ${rankData.warna}${rankData.nama} berhasil dibuat!`);
                         player.playSound("random.levelup");
-                    } catch (e) {
-                        player.sendMessage("§cGagal menyimpan rank!");
-                    }
-                })
-                .catch(err => console.warn("Error Create Rank UI: " + err));
+                    });
+            } catch (e) {
+                console.warn("Create Rank Error:", e);
+            }
         });
-        return;
-    }
-
-    // Format Chat Otomatis
-    event.cancel = true;
-    system.run(() => {
-        let rankDisplay = player.getDynamicProperty("current_rank") ?? "§7Member";
-
-        if (player.hasTag("owner")) rankDisplay = "§l§eOWNER";
-        else if (player.hasTag("admin")) rankDisplay = "§eADMIN";
-        else if (player.hasTag("worker")) rankDisplay = "§aWORKER";
-
-        world.sendMessage(`[${rankDisplay}§r] ${player.name}: ${message}`);
     });
-});
+}
 
-// --- 2. MENU UTAMA SMARTPHONE ---
+// --- SMARTPHONE UI ---
 export function openSmartphoneUI(player) {
     const credixBalance = player.getDynamicProperty("credix") ?? 0;
 
-    system.run(() => {
-        const mainMenu = new ActionFormData()
-            .title("§l§9SMARTPHONE")
-            .body(`Selamat datang, §b${player.name}§f!\nSaldo: §e${credixBalance} Credix`)
-            .button("Personal & Sosial\n§8Hubungan & Pesan")
-            .button("Ekonomi & Aset\n§8Keuangan & Properti")
-            .button("§eToko Rank\n§8Beli Rank Eksklusif")
-            .button("Layanan Publik\n§8Lapor & Informasi")
-            .button("Karir & Progres\n§8Level & Statistik");
+    system.runTimeout(() => {
+        try {
+            const form = new ActionFormData()
+                .title("§l§9SMARTPHONE")
+                .body(`Selamat datang, §b${player.name}§f!\nSaldo: §e${credixBalance} Credix`)
+                .button("Personal & Sosial\n§8Hubungan & Pesan")
+                .button("Ekonomi & Aset\n§8Keuangan & Properti")
+                .button("§eToko Rank\n§8Beli Rank Eksklusif")
+                .button("Layanan Publik\n§8Lapor & Informasi")
+                .button("Karir & Progres\n§8Level & Statistik");
 
-        mainMenu.show(player).then((result) => {
-            if (!result || result.canceled) return;
+            form.show(player).then((res) => {
+                if (!res || res.canceled) return;
 
-            system.run(() => {
-                switch (result.selection) {
+                switch (res.selection) {
                     case 0: openPersonalMenu(player); break;
                     case 1: openEconomyMenu(player); break;
                     case 2: openBuyRankMenu(player); break;
@@ -119,11 +106,14 @@ export function openSmartphoneUI(player) {
                     case 4: openProgressMenu(player); break;
                 }
             });
-        }).catch(err => console.warn("Gagal membuka Smartphone UI: " + err));
-    });
+
+        } catch (e) {
+            console.warn("Smartphone UI Error:", e);
+        }
+    }, 2);
 }
 
-// --- 3. MENU TOKO RANK ---
+// --- TOKO RANK ---
 function openBuyRankMenu(player) {
     let ranks = [];
 
@@ -135,44 +125,49 @@ function openBuyRankMenu(player) {
     }
 
     if (!Array.isArray(ranks) || ranks.length === 0) {
-        return player.sendMessage("§cMaaf, saat ini belum ada rank yang tersedia di toko.");
+        return player.sendMessage("§cBelum ada rank tersedia.");
     }
 
-    const credixBalance = player.getDynamicProperty("credix") ?? 0;
+    const balance = player.getDynamicProperty("credix") ?? 0;
 
-    system.run(() => {
-        const buyForm = new ActionFormData()
-            .title("§l§eTOKO RANK")
-            .body(`Pilih rank eksklusif kamu.\nSaldo Anda: §e${credixBalance} Credix`);
+    system.runTimeout(() => {
+        try {
+            const form = new ActionFormData()
+                .title("§l§eTOKO RANK")
+                .body(`Saldo: §e${balance} Credix`);
 
-        ranks.forEach(r => {
-            buyForm.button(`${r.warna}${r.nama}\n§8Harga: ${r.harga} Credix`);
-        });
+            ranks.forEach(r => {
+                form.button(`${r.warna}${r.nama}\n§8${r.harga} Credix`);
+            });
 
-        buyForm.button("§7Kembali");
+            form.button("§7Kembali");
 
-        buyForm.show(player).then(res => {
-            if (!res || res.canceled) return;
+            form.show(player).then(res => {
+                if (!res || res.canceled) return;
 
-            if (res.selection === ranks.length) {
-                return system.run(() => openSmartphoneUI(player));
-            }
+                if (res.selection === ranks.length) {
+                    return openSmartphoneUI(player);
+                }
 
-            const selected = ranks[res.selection];
-            const playerMoney = player.getDynamicProperty("credix") ?? 0;
+                const selected = ranks[res.selection];
+                const money = player.getDynamicProperty("credix") ?? 0;
 
-            if (!selected) return;
+                if (!selected) return;
 
-            if (playerMoney >= selected.harga) {
-                player.setDynamicProperty("credix", playerMoney - selected.harga);
-                player.setDynamicProperty("current_rank", `${selected.warna}${selected.nama}`);
+                if (money >= selected.harga) {
+                    player.setDynamicProperty("credix", money - selected.harga);
+                    player.setDynamicProperty("current_rank", `${selected.warna}${selected.nama}`);
 
-                player.sendMessage(`§aSelamat! Kamu sekarang memiliki rank ${selected.warna}${selected.nama}§a.`);
-                player.playSound("random.levelup");
-            } else {
-                player.sendMessage("§cSaldo Credix kamu tidak cukup!");
-                player.playSound("note.bass");
-            }
-        }).catch(err => console.warn("Error Buy Rank UI: " + err));
-    });
+                    player.sendMessage(`§aBerhasil beli rank ${selected.nama}`);
+                    player.playSound("random.levelup");
+                } else {
+                    player.sendMessage("§cUang tidak cukup!");
+                    player.playSound("note.bass");
+                }
+            });
+
+        } catch (e) {
+            console.warn("Buy Rank Error:", e);
+        }
+    }, 2);
 }
