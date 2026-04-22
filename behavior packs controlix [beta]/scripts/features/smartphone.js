@@ -70,7 +70,7 @@ world.beforeEvents.chatSend.subscribe((event) => {
         else if (player.hasTag("admin")) rankDisplay = "§eADMIN";
         else if (player.hasTag("worker")) rankDisplay = "§aWORKER";
 
-        world.sendMessage(`[${rankDisplay}§r] ${player.name}: ${message}`);
+        world.sendMessage(`[${rankDisplay}] ${player.name}: ${message}`);
     });
 });
 
