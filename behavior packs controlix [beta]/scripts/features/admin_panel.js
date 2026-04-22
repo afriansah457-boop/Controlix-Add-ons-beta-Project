@@ -3,10 +3,15 @@ import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 
 const ADMIN_ITEM_ID = "controlix:admin_console";
 
-// --- 1. INITIALIZATION ---
-if (world.getDynamicProperty("private_world") === undefined) {
-    world.setDynamicProperty("private_world", false);
-}
+world.afterEvents.worldInitialize.subscribe(() => {
+    try {
+        if (world.getDynamicProperty("private_world") === undefined) {
+            world.setDynamicProperty("private_world", false);
+        }
+    } catch (e) {
+        console.error("Init Error:", e);
+    }
+});
 
 // --- 2. LOGIKA DATABASE LAHAN (Helper) ---
 function getDaftarLahan() {
