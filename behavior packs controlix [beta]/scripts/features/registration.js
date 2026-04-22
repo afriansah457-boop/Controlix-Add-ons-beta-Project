@@ -7,7 +7,7 @@ export function openRegistrationMenu(player) {
         .textField("Nama Karakter:", "Masukkan nama RP kamu")
         .textField("Umur:", "Contoh: 18")
         .dropdown("Gender:", ["Laki-laki", "Perempuan"])
-        .submitButton("Daftar Sekarang");
+        .submitButton("Submit");
 
     form.show(player).then((result) => {
         if (result.canceled) {
