@@ -4,7 +4,7 @@ import { openAdminLogin } from "./features/admin.js";
 import { openAdminPanel } from "./features/admin_panel.js"; 
 import { bukaMenuLahan } from "./features/land_claim.js";
 import { openRegistrationMenu } from "./features/registration.js";
-import { bukaMenuLahan } from "./features/command.js";
+import "./features/command.js";
 
 // --- 1. SENSOR PEMAIN MASUK & REGISTRASI ---
 world.afterEvents.playerSpawn.subscribe((event) => {
