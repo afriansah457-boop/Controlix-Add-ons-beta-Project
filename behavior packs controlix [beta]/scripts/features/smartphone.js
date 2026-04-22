@@ -4,6 +4,7 @@ import { openPersonalMenu } from "./menus/personal.js";
 import { openEconomyMenu } from "./menus/economy.js";
 import { openPublicMenu } from "./menus/public.js";
 import { openProgressMenu } from "./menus/progress.js";
+import { openBuyRankMenu } from "./rank.js";
 
 // --- INIT DATA (ANTI ERROR) ---
 system.run(() => {
