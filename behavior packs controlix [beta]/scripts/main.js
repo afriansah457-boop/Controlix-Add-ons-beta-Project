@@ -6,7 +6,7 @@ import { bukaMenuLahan } from "./features/land_claim.js";
 import { openRegistrationMenu } from "./features/registration.js";
 import "./features/command.js";
 
-// --- 1. SENSOR PEMAIN MASUK & REGISTRASI ---
+// --- 1. SENSOR PEMAIN MASUK ---
 world.afterEvents.playerSpawn.subscribe((event) => {
     const { player } = event;
     const isRegistered = player.getDynamicProperty("is_registered");
@@ -17,7 +17,7 @@ world.afterEvents.playerSpawn.subscribe((event) => {
         
         system.runTimeout(() => {
             openRegistrationMenu(player);
-        }, 60); 
+        }, 60);
     } else {
         const rpName = player.getDynamicProperty("rp_name");
         const rpAge = player.getDynamicProperty("rp_age");
@@ -25,97 +25,101 @@ world.afterEvents.playerSpawn.subscribe((event) => {
     }
 });
 
-// --- 2. SISTEM CHAT TERPADU (Command & Format Chat RP) ---
-world.beforeEvents.chatSend.subscribe((event) => {
-    const { sender: player, message } = event;
-    const msg = message.toLowerCase();
-    
-    // Batalkan pesan asli segera agar tidak muncul dobel
-    event.cancel = true;
+// --- 2. CHAT SYSTEM ---
+if (world.beforeEvents?.chatSend) {
+    world.beforeEvents.chatSend.subscribe((event) => {
+        const { sender: player, message } = event;
+        const msg = message.toLowerCase();
 
-    system.run(() => {
-        // Perintah Admin Login
-        if (msg === "!admin") {
-            return openAdminLogin(player);
-        }
+        event.cancel = true;
 
-        // Perintah Reset Registrasi (Hanya Admin)
-        if (msg.startsWith("!resetregis")) {
-            const isAdmin = player.hasTag("admin") || player.getDynamicProperty("role") === "admin";
-            if (isAdmin) {
-                player.setDynamicProperty("is_registered", undefined);
-                return player.sendMessage("§e[SYSTEM] Data registrasi direset. Silakan re-join!");
+        system.run(() => {
+            // ADMIN LOGIN
+            if (msg === "!admin") {
+                return openAdminLogin(player);
             }
-            return player.sendMessage("§c[ERROR] Anda tidak memiliki izin!");
-        }
 
-        // Filter Mute
-        if (player.hasTag("muted")) {
-            return player.sendMessage("§cKamu sedang dimute oleh admin!");
-        }
+            // RESET
+            if (msg.startsWith("!resetregis")) {
+                const isAdmin = player.hasTag("admin") || player.getDynamicProperty("role") === "admin";
+                if (isAdmin) {
+                    player.setDynamicProperty("is_registered", undefined);
+                    return player.sendMessage("§e[SYSTEM] Data registrasi direset.");
+                }
+                return player.sendMessage("§cTidak ada izin!");
+            }
 
-        // Format Chat RP
-        const rpName = player.getDynamicProperty("rp_name");
-        if (rpName) {
-            let prefix = "§7[WARGA]";
-            if (player.hasTag("owner")) prefix = "§l§e[OWNER]";
-            else if (player.hasTag("admin")) prefix = "§e[ADMIN]";
-            else if (player.hasTag("worker")) prefix = "§a[WORKER]";
+            // MUTE
+            if (player.hasTag("muted")) {
+                return player.sendMessage("§cKamu sedang dimute!");
+            }
 
-            world.sendMessage(`${prefix} ${rpName}: ${message}`);
-        } else {
-            player.sendMessage("§c[!] Selesaikan registrasi dulu untuk bicara!");
-        }
-    });
-});
+            // CHAT RP
+            const rpName = player.getDynamicProperty("rp_name");
+            if (rpName) {
+                let prefix = "§7[WARGA]";
+                if (player.hasTag("owner")) prefix = "§l§e[OWNER]";
+                else if (player.hasTag("admin")) prefix = "§e[ADMIN]";
+                else if (player.hasTag("worker")) prefix = "§a[WORKER]";
 
-// --- 3. ITEM USE SENSOR (Smartphone & Admin Panel) ---
-world.afterEvents.itemUse.subscribe((event) => {
-    const { source: player, itemStack } = event;
-    if (!itemStack) return; 
-
-    const typeId = itemStack.typeId;
-
-    system.run(() => {
-        if (typeId === "controlix:smartphone_1") {
-            openSmartphoneUI(player);
-        } 
-        else if (typeId === "controlix:admin_console" || typeId === "controlix:admin_panel") { 
-            const isAdmin = player.hasTag("admin") || player.getDynamicProperty("role") === "admin";
-            if (isAdmin) {
-                openAdminPanel(player);
+                world.sendMessage(`${prefix} ${rpName}: ${message}`);
             } else {
-                player.sendMessage("§c[ERROR] Kamu tidak memiliki akses admin!");
-                player.playSound("note.bass"); 
+                player.sendMessage("§cSelesaikan registrasi dulu!");
             }
-        }
+        });
     });
-});
+}
 
-// --- 4. CLICK ON BLOCK SENSOR (Sistem Land Claim) ---
+// --- 3. ITEM USE (DIGABUNG SEMUA) ---
 world.afterEvents.itemUse.subscribe((event) => {
     const { source: player, itemStack, block } = event;
-    if (!itemStack || itemStack.typeId !== "controlix:land_claim") return;
+    if (!itemStack) return;
 
+    const typeId = itemStack.typeId;
     const isAdmin = player.hasTag("admin") || player.getDynamicProperty("role") === "admin";
-    if (!isAdmin) return player.sendMessage("§c[ERROR] Khusus Admin!");
 
-    const { x, y, z } = block.location;
-    const titik1Raw = player.getDynamicProperty("titik_1");
+    // DEBUG
+    console.warn("Item dipakai:", typeId);
 
-    if (titik1Raw === undefined) {
-        player.setDynamicProperty("titik_1", `${x},${y},${z}`);
-        player.sendMessage(`§b[LAND CLAIM]§f Titik 1: §a${x}, ${y}, ${z}`);
-        player.playSound("random.levelup");
-    } else {
-        const koordinat2 = `${x},${y},${z}`;
-        player.sendMessage(`§b[LAND CLAIM]§f Titik 2: §a${x}, ${y}, ${z}`);
+    system.runTimeout(() => {
 
-        const playerNames = world.getAllPlayers().map(p => p.name); 
-        system.run(() => {
-            bukaMenuLahan(player, playerNames, titik1Raw, koordinat2);
-        });
+        // 📱 SMARTPHONE
+        if (typeId === "controlix:smartphone_1") {
+            return openSmartphoneUI(player);
+        }
 
-        player.setDynamicProperty("titik_1", undefined);
-    }
+        // 🛠 ADMIN PANEL
+        if (typeId === "controlix:admin_console" || typeId === "controlix:admin_panel") {
+            if (isAdmin) {
+                return openAdminPanel(player);
+            } else {
+                player.sendMessage("§cTidak ada akses admin!");
+                player.playSound("note.bass");
+                return;
+            }
+        }
+
+        // 🧱 LAND CLAIM
+        if (typeId === "controlix:land_claim" && block) {
+            if (!isAdmin) return player.sendMessage("§cAdmin only!");
+
+            const { x, y, z } = block.location;
+            const titik1Raw = player.getDynamicProperty("titik_1");
+
+            if (!titik1Raw) {
+                player.setDynamicProperty("titik_1", `${x},${y},${z}`);
+                player.sendMessage(`§bTitik 1: §a${x}, ${y}, ${z}`);
+                player.playSound("random.levelup");
+            } else {
+                const koordinat2 = `${x},${y},${z}`;
+                player.sendMessage(`§bTitik 2: §a${x}, ${y}, ${z}`);
+
+                const playerNames = world.getAllPlayers().map(p => p.name);
+
+                bukaMenuLahan(player, playerNames, titik1Raw, koordinat2);
+                player.setDynamicProperty("titik_1", undefined);
+            }
+        }
+
+    }, 2);
 });
