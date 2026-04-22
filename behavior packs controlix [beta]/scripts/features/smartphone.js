@@ -23,7 +23,9 @@ world.beforeEvents.chatSend.subscribe((event) => {
                 .title("§lBuat Rank Baru")
                 .textField("Nama Rank:", "Contoh: Citizen")
                 .dropdown("Warna Rank:", ["§fPutih", "§cMerah", "§eKuning", "§aHijau", "§bBiru", "§dPink"])
-                .textField("Harga (Credix):", "Masukkan harga...", "100")
+                .textField("Harga (Credix):", "Masukkan harga...", {
+                 defaultValue: "100"
+})
                 .show(player)
                 .then((res) => {
                     if (!res || res.canceled || !res.formValues) return;
