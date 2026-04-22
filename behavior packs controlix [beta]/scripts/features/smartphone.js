@@ -5,6 +5,17 @@ import { openEconomyMenu } from "./menus/economy.js";
 import { openPublicMenu } from "./menus/public.js";
 import { openProgressMenu } from "./menus/progress.js";
 
+// --- INIT DATA (ANTI ERROR) ---
+system.run(() => {
+    try {
+        if (world.getDynamicProperty("server_ranks") === undefined) {
+            world.setDynamicProperty("server_ranks", "[]");
+        }
+    } catch (e) {
+        console.warn("Init Error:", e);
+    }
+});
+
 // --- 1. LOGIKA CHAT & COMMAND !createrank ---
 world.beforeEvents.chatSend.subscribe((event) => {
     const { sender: player, message } = event;
@@ -24,8 +35,8 @@ world.beforeEvents.chatSend.subscribe((event) => {
                 .textField("Nama Rank:", "Contoh: Citizen")
                 .dropdown("Warna Rank:", ["§fPutih", "§cMerah", "§eKuning", "§aHijau", "§bBiru", "§dPink"])
                 .textField("Harga (Credix):", "Masukkan harga...", {
-                 defaultValue: "100"
-})
+                    defaultValue: "100"
+                })
                 .show(player)
                 .then((res) => {
                     if (!res || res.canceled || !res.formValues) return;
@@ -37,11 +48,11 @@ world.beforeEvents.chatSend.subscribe((event) => {
                         return player.sendMessage("§cNama rank tidak boleh kosong!");
                     }
 
-                    const hargaFinal = parseInt(hargaRaw) || 0;
+                    const hargaFinal = isNaN(parseInt(hargaRaw)) ? 0 : parseInt(hargaRaw);
 
                     const rankData = {
-                        nama: nama,
-                        warna: warnaKodes[warnaIdx],
+                        nama: nama.trim(),
+                        warna: warnaKodes[warnaIdx] ?? "§f",
                         harga: hargaFinal
                     };
 
@@ -49,15 +60,20 @@ world.beforeEvents.chatSend.subscribe((event) => {
                     try {
                         const savedData = world.getDynamicProperty("server_ranks");
                         existingRanks = savedData ? JSON.parse(savedData) : [];
-                    } catch {
+                    } catch (e) {
+                        console.warn("Data corrupt, reset.");
                         existingRanks = [];
                     }
 
                     existingRanks.push(rankData);
-                    world.setDynamicProperty("server_ranks", JSON.stringify(existingRanks));
 
-                    player.sendMessage(`§aRank ${warnaKodes[warnaIdx]}${nama} §aberhasil dibuat!`);
-                    player.playSound("random.levelup");
+                    try {
+                        world.setDynamicProperty("server_ranks", JSON.stringify(existingRanks));
+                        player.sendMessage(`§aRank ${rankData.warna}${rankData.nama} §aberhasil dibuat!`);
+                        player.playSound("random.levelup");
+                    } catch (e) {
+                        player.sendMessage("§cGagal menyimpan rank!");
+                    }
                 })
                 .catch(err => console.warn("Error Create Rank UI: " + err));
         });
@@ -67,7 +83,7 @@ world.beforeEvents.chatSend.subscribe((event) => {
     // Format Chat Otomatis
     event.cancel = true;
     system.run(() => {
-        let rankDisplay = player.getDynamicProperty("current_rank") || "§7Member";
+        let rankDisplay = player.getDynamicProperty("current_rank") ?? "§7Member";
 
         if (player.hasTag("owner")) rankDisplay = "§l§eOWNER";
         else if (player.hasTag("admin")) rankDisplay = "§eADMIN";
@@ -79,7 +95,7 @@ world.beforeEvents.chatSend.subscribe((event) => {
 
 // --- 2. MENU UTAMA SMARTPHONE ---
 export function openSmartphoneUI(player) {
-    const credixBalance = player.getDynamicProperty("credix") || 0;
+    const credixBalance = player.getDynamicProperty("credix") ?? 0;
 
     system.run(() => {
         const mainMenu = new ActionFormData()
@@ -118,11 +134,11 @@ function openBuyRankMenu(player) {
         ranks = [];
     }
 
-    if (ranks.length === 0) {
+    if (!Array.isArray(ranks) || ranks.length === 0) {
         return player.sendMessage("§cMaaf, saat ini belum ada rank yang tersedia di toko.");
     }
 
-    const credixBalance = player.getDynamicProperty("credix") || 0;
+    const credixBalance = player.getDynamicProperty("credix") ?? 0;
 
     system.run(() => {
         const buyForm = new ActionFormData()
@@ -143,7 +159,9 @@ function openBuyRankMenu(player) {
             }
 
             const selected = ranks[res.selection];
-            const playerMoney = player.getDynamicProperty("credix") || 0;
+            const playerMoney = player.getDynamicProperty("credix") ?? 0;
+
+            if (!selected) return;
 
             if (playerMoney >= selected.harga) {
                 player.setDynamicProperty("credix", playerMoney - selected.harga);
