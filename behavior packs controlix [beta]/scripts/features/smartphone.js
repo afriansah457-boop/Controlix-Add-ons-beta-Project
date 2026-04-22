@@ -1,5 +1,5 @@
-    }).catch(err => console.error("Error Buy Rank UI: " + err));
-}import { world, system } from "@minecraft/server";
+    .catch(err => console.error("Error Buy Rank UI: " + err));
+import { world, system } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { openPersonalMenu } from "./menus/personal.js";
 import { openEconomyMenu } from "./menus/economy.js";
