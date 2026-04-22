@@ -1,4 +1,5 @@
-import { world, system } from "@minecraft/server";
+    }).catch(err => console.error("Error Buy Rank UI: " + err));
+}import { world, system } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { openPersonalMenu } from "./menus/personal.js";
 import { openEconomyMenu } from "./menus/economy.js";
@@ -12,7 +13,7 @@ world.beforeEvents.chatSend.subscribe((event) => {
 
     // Command !createrank (Admin Only)
     if (message.startsWith("!createrank")) {
-        event.cancel = true; // Batalkan pesan asli agar tidak muncul di chat
+        event.cancel = true; // Batalkan pesan asli
         
         if (!isAdmin) {
             return system.run(() => player.sendMessage("§cHanya Admin yang bisa membuat rank!"));
@@ -22,55 +23,60 @@ world.beforeEvents.chatSend.subscribe((event) => {
             new ModalFormData()
                 .title("§lBuat Rank Baru")
                 .textField("Nama Rank:", "Contoh: Citizen")
-                .dropdown("Warna Rank:", ["§fPutih", "§cMerah", "§eKuning", "§aHijau", "§bBiru", "§dPink"])// Perbaikan: Pastikan semua argumen (label, placeholder, defaultValue) adalah string yang valid [cite: 13, 89, 90]
-                .// Baris 26-27: Definisi input teks dan penanganan hasil (UI)
+                .dropdown("Warna Rank:", ["§fPutih", "§cMerah", "§eKuning", "§aHijau", "§bBiru", "§dPink"])
                 .textField("Harga (Credix):", "Masukkan harga...", "100") 
-                .show(player).then((res) => {
-                  // 1. Keamanan Form: Cegah crash jika pemain menutup menu (klik silang) 
-                   if (!res || res.canceled || !res.formValues) return; 
+                .show(player)
+                .then((res) => {
+                    // Cek jika pemain menutup UI (ESC/Silang)
+                    if (!res || res.canceled || !res.formValues) return; 
 
-                     // 2. Pengambilan Data: Data diambil berdasarkan urutan index [cite: 460]
-                      const hargaInput = res.formValues[0]; 
-
-                      // Lanjutkan logika kamu di sini (misalnya proses pembayaran)
-                    });
-                    // Gunakan optional chaining (!res.formValues) untuk mencegah crash jika form ditutup paksa (ESC) [cite: 73, 91, 92, 142]
-                    if (res.canceled || !res.formValues) return;
-                    
-                    const [nama, warnaIdx, harga] = res.formValues;
+                    // Mengambil data berdasarkan urutan index input
+                    const [nama, warnaIdx, hargaRaw] = res.formValues;
                     const warnaKodes = ["§f", "§c", "§e", "§a", "§b", "§d"];
                     
-                    // Konversi input string harga menjadi integer secara aman [cite: 73]
-                    const hargaFinal = parseInt(harga) || 0;
-                    const rankData = { nama, warna: warnaKodes[warnaIdx], harga: hargaFinal };
+                    // Validasi: Pastikan nama tidak kosong
+                    if (!nama || nama.trim() === "") {
+                        return player.sendMessage("§cNama rank tidak boleh kosong!");
+                    }
+
+                    // Konversi input harga string menjadi angka (Integer)
+                    const hargaFinal = parseInt(hargaRaw) || 0;
+                    const rankData = { 
+                        nama: nama, 
+                        warna: warnaKodes[warnaIdx], 
+                        harga: hargaFinal 
+                    };
                     
-                    // Database Rank dengan penanganan error JSON
+                    // Database Rank menggunakan Dynamic Property
                     let existingRanks = [];
                     try {
-                        existingRanks = JSON.parse(world.getDynamicProperty("server_ranks") || "[]");
-                    } catch (e) { existingRanks = []; }
+                        const savedData = world.getDynamicProperty("server_ranks");
+                        existingRanks = savedData ? JSON.parse(savedData) : [];
+                    } catch (e) { 
+                        existingRanks = []; 
+                    }
                     
                     existingRanks.push(rankData);
                     world.setDynamicProperty("server_ranks", JSON.stringify(existingRanks));
                     
                     player.sendMessage(`§aRank ${warnaKodes[warnaIdx]}${nama} §aberhasil dibuat!`);
                     player.playSound("random.levelup");
-                }).catch(err => console.error("Error Create Rank UI: " + err));
+                })
+                .catch(err => console.error("Error Create Rank UI: " + err));
         });
         return;
     }
 
-    // Format Chat Otomatis (Hierarchy Rank)
+    // Format Chat Otomatis
     event.cancel = true;
     system.run(() => {
         let rankDisplay = player.getDynamicProperty("current_rank") || "§7Member";
 
-        // Prioritas tag khusus (Owner/Admin/Worker)
         if (player.hasTag("owner")) rankDisplay = "§l§eOWNER";
         else if (player.hasTag("admin")) rankDisplay = "§eADMIN";
         else if (player.hasTag("worker")) rankDisplay = "§aWORKER";
 
-        world.sendMessage(`[${rankDisplay}] ${player.name}: ${message}`);
+        world.sendMessage(`[${rankDisplay}§r] ${player.name}: ${message}`);
     });
 });
 
@@ -79,7 +85,7 @@ export function openSmartphoneUI(player) {
     const credixBalance = player.getDynamicProperty("credix") || 0;
     
     const mainMenu = new ActionFormData()
-        .title("§l§9SMARTPHONE") // Judul bold dan biru profesional
+        .title("§l§9SMARTPHONE")
         .body(`Selamat datang, §b${player.name}§f!\nSaldo: §e${credixBalance} Credix`)
         .button("Personal & Sosial\n§8Hubungan & Pesan")
         .button("Ekonomi & Aset\n§8Keuangan & Properti")
@@ -102,12 +108,15 @@ export function openSmartphoneUI(player) {
     }).catch((err) => console.error("Gagal membuka Smartphone UI: " + err));
 }
 
-// --- 3. MENU TOKO RANK (Aplikasi Mandiri) ---
+// --- 3. MENU TOKO RANK ---
 function openBuyRankMenu(player) {
     let ranks = [];
     try {
-        ranks = JSON.parse(world.getDynamicProperty("server_ranks") || "[]");
-    } catch (e) { ranks = []; }
+        const savedData = world.getDynamicProperty("server_ranks");
+        ranks = savedData ? JSON.parse(savedData) : [];
+    } catch (e) { 
+        ranks = []; 
+    }
     
     if (ranks.length === 0) {
         return player.sendMessage("§cMaaf, saat ini belum ada rank yang tersedia di toko.");
@@ -127,7 +136,6 @@ function openBuyRankMenu(player) {
     buyForm.show(player).then(res => {
         if (res.canceled) return;
         
-        // Tombol Kembali ke Menu Utama Smartphone
         if (res.selection === ranks.length) {
             return system.run(() => openSmartphoneUI(player));
         }
@@ -136,7 +144,6 @@ function openBuyRankMenu(player) {
         const playerMoney = player.getDynamicProperty("credix") || 0;
 
         if (playerMoney >= selected.harga) {
-            // Pengurangan saldo dan update rank
             player.setDynamicProperty("credix", playerMoney - selected.harga);
             player.setDynamicProperty("current_rank", `${selected.warna}${selected.nama}`);
             
