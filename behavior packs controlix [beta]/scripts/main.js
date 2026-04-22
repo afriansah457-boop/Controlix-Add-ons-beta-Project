@@ -5,6 +5,7 @@ import { openAdminPanel } from "./features/admin_panel.js";
 import { bukaMenuLahan } from "./features/land_claim.js";
 import { openRegistrationMenu } from "./features/registration.js";
 import "./features/command.js";
+import { openCreateRankMenu } from "./features/rank.js";
 
 // --- 1. PLAYER SPAWN (SAFE) ---
 if (world.afterEvents?.playerSpawn) {
