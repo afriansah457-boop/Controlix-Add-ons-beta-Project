@@ -2,7 +2,7 @@
   "format_version": 2,
   "header": {
     "name": "Controlix BP",
-    "description": "behavior packs",
+    "description": "Controlix addon || v0.1",
     "uuid": "2e7a1b3c-4d5e-4f6a-8b9c-0d1e2f3a4b5c",
     "version": [1, 0, 0],
     "min_engine_version": [1, 26, 10]
