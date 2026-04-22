@@ -5,7 +5,7 @@ export function openEconomyMenu(player) {
     .title("EKONOMI & ASET")
     .body("Pilih aplikasi finansial:")
     .button("Bank / Wallet")
-    .button("Transfer Money")
+    .button("Transfer Credix")
     .button("Marketplace")
     .button("Shop Order")
     .button("Property / House")
